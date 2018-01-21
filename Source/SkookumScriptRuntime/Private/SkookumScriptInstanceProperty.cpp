@@ -69,6 +69,7 @@ SkInstance * USkookumScriptInstanceProperty::construct_instance(void * data_p, U
   instance_p->construct<SkUEEntity>(obj_p);             // SkInstance points back to the owner object
   set_instance(data_p, instance_p);                     // Store SkInstance in object
   instance_p->call_default_constructor();               // Call script constructor    
+  instance_p->construct<SkUEEntity>(obj_p);             // Initialize object pointer a second time as the default constructor might have overclobbered it (e.g. SkookumScriptBehaviorComponent)
   return instance_p;
   }
 
@@ -219,7 +220,7 @@ void USkookumScriptInstanceProperty::DestroyValueInternal(void * data_p) const
   {
   UObject * owner_p = get_owner(data_p);
   // Leave untouched on CDOs
-  if (!(owner_p->GetFlags() & RF_ClassDefaultObject))
+  if (!(owner_p->GetFlags() & (RF_ClassDefaultObject | RF_BeginDestroyed | RF_FinishDestroyed)))
     {
     // Leave actors alone as the component we attached will take care of itself
     AActor * actor_p = Cast<AActor>(owner_p);

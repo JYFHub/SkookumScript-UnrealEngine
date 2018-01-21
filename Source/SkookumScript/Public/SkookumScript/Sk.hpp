@@ -188,7 +188,6 @@ class SkAppInfo
 
 typedef int32_t   tSkInteger;
 typedef f32       tSkReal;
-typedef char      tSkChar;
 typedef bool      tSkBoolean;
 typedef uint32_t  tSkEnum;
 

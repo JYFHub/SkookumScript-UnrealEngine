@@ -15,7 +15,7 @@
 //   if vec1.near?(vec2) [do_stuff]
 //   do_stuff when vec1.near?(vec2)
 //
-// # See:       equal?[=]
+// # See:       equal?[=], distance(), distance_squared()
 // # Author(s): Conan Reis
 //---------------------------------------------------------------------------------------
 
