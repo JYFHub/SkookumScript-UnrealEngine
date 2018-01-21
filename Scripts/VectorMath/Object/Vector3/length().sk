@@ -7,8 +7,8 @@
 // # Examples:
 //  !len: vec.length
 //
-// # See:       length_sq(), distance(), distance_sq()
-// # Notes:     This is a tiny bit slower than calling `length_sq()`
+// # See:       length_sq(), distance(), distance_squared()
+// # Notes:     This is a tiny bit slower than calling `length_squared()`
 // # Author(s): Conan Reis
 //---------------------------------------------------------------------------------------
 

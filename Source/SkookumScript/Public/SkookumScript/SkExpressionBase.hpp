@@ -94,8 +94,9 @@ enum eSkExprType
   SkExprType_copy_invoke,              // [29] SkCopyInvoke - Instantiates object via !copy and calls initial method on it - expr!method -> ExprType!copy(expr).method or ExprType!copy(expr).[method self]
   SkExprType_concurrent_sync,          // [30] SkConcurrentSync - convergent concurrent threaded expressions - sync [ _expr1 _expr2 _expr3 ]
   SkExprType_concurrent_race,          // [31] SkConcurrentRace - concurrent racing expressions - race [ _expr1 _expr2 _expr3 ]
-  SkExprType_concurrent_branch,        // [32] SkConcurrentBranch - branched concurrent expression - branch [ _expr ]
+  SkExprType_concurrent_branch,        // [32] SkConcurrentBranch - branched concurrent expression - branch _expr
   SkExprType_change,                   // [33] SkChangeMind - change mind - change [ws expression] ws expression
+  SkExprType_nil_coalescing,           // [34] SkNilCoalescing - expr1??expr2
 
   SkExprType__max                            // Highest possible value + 1   
   };
