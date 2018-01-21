@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------
-// Description Returns integer number representation of itself
-// Returns     itself as an integer
-// Author(s)   Conan Reis
+// Returns integer number representation of itself rounded to nearest integer.
+// 
+// #Returns: itself rounded to an integer
 //---------------------------------------------------------------------------------------
 
 () Integer

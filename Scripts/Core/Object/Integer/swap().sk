@@ -1,10 +1,13 @@
 //---------------------------------------------------------------------------------------
-// Description Swap the value of this number with the supplied number.
-// Returns     itself
-// Arg         num - number to take value from and give current value to
-// Examples    do_stuff(num.swap(100))
-//             num1.swap(num2)
-// Author(s)   Conan Reis
+// Swap the content value of this number with the supplied number.
+// 
+// Params:
+//   num: number to take value from and give current value to
+//
+// Returns: itself
+//
+// Examples:
+//   num1.swap(num2)
 //---------------------------------------------------------------------------------------
 
 (Integer num) Integer
@@ -12,7 +15,7 @@
 // Equivalent to:
 
 // [
-// !old_num: as_copy
+// !old_num: this!
 // this := num
 // num  := old_num
 // this

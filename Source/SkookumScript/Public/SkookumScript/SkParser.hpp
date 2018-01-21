@@ -35,7 +35,7 @@
 /*
 
 =========================================================================================
-SkookumScript Syntax:
+SkookumScript Syntax:  http://skookumscript.com/docs/v3.0/lang/syntax/
 =========================================================================================
 
 File Names and Bodies:
@@ -59,7 +59,8 @@ annotation         = '&' instance_name
 
 Expressions (the starting point):
 ----------------------
-expression       = literal | identifier | primitive | invocation
+expression       = literal | variable-primitive | identifier | invocation
+                   | type-primitive | flow-control
 
 Literals:
 ----------------------
@@ -78,6 +79,14 @@ character-literal = '`' character
 list-literal      = [(list-class constructor-name invocation-args) | class]
                     '{' ws [expression {ws [',' ws] expression} ws] '}'
 closure           = ['^' {annotation ws} ['_' ws] [expression ws]] [parameters ws] code-block
+
+Variable Primitives:
+----------------------
+variable-primitive = create-temporary | bind
+create-temporary   = define-temporary [ws binding]
+define-temporary   = '!' ws variable-name
+bind               = variable-ident ws binding
+binding            = ':' ws expression
 
 Identifiers:
 ----------------------
@@ -98,31 +107,6 @@ instance-name    = lowercase {alphanumeric}
 class-name       = uppercase {alphanumeric}
 scope            = class '@' 
 
-Primitives:
-----------------------
-primitive        = bind | conditional | case | when | unless | loop | sync-block
-                   | race-block | branch-block | change-mind | class-conversion
-                   | class-cast | code-block
-bind             = variable-ident ws binding
-binding          = ':' ws expression
-conditional      = 'if' {ws expression ws code-block}1+ [ws 'else' ws code-block]
-case             = 'case' ws expression {ws expression ws code-block}1+ [ws 'else' ws code-block]
-when             = expression ws 'when' ws expression
-unless           = expression ws 'unless' ws expression
-loop             = 'loop' [ws instance-name] ws code-block
-loop-exit        = 'exit' [ws instance-name]
-sync-block       = 'sync' ws code-block
-race-block       = 'race' ws code-block
-branch-block     = 'branch' ws expression
-change-mind      = 'change' ws expression ws expression
-class-cast       = expression ws '<>' [class-desc]
-class-conversion = expression ws '>>' [convert-name]
-convert-name     = class
-code-block       = '[' ws [statement {wsr statement} ws] ']'
-statement        = expression | create-temporary | loop-exit
-create-temporary = define-temporary [ws binding]
-define-temporary = '!' ws variable-name
-
 Invocations:
 ----------------------
 invocation           = invoke-call | invoke-cascade | invoke-apply | instantiation
@@ -133,7 +117,7 @@ slice-operator       = expression '{' ws range-literal [wsr expression] ws '}'
 invoke-call          = (expression ws '.' invoke-selector) | invoke-selector-core | operator-call
 invoke-cascade       = expression ws '.' ws '[' {ws invoke-selector | operator-selector}2+ ws ']'
 invoke-apply         = expression ws '%' invoke-selector
-instantiation        = class-instance | expression '!' [instance-name] invocation args
+instantiation        = [class-instance] | expression '!' [instance-name] invocation args
 invoke-selector-core = method-call-core | coroutine-call
 invoke-selector      = method-call-core | method-call-conv | coroutine-call
 method-call-core     = [scope] method-name-core invocation-args
@@ -157,6 +141,30 @@ return-arg*          = [named-spec ws] variable-ident | define-temporary
 named-spec           = variable-name ws ':'
 
   * only trailing arguments may be named
+
+Type Primitives:
+----------------------
+primitive        = class-cast | class-conversion
+class-cast       = expression ws '<>' [class-desc]
+class-conversion = expression ws '>>' [class-name]
+
+Flow Control:
+----------------------
+primitive        = code-block | conditional | case | when | unless | loop | nil-coalescing
+                   | sync-block | race-block | branch-block | change-mind
+code-block       = '[' ws [statement {wsr statement} ws] ']'
+statement        = expression | create-temporary | loop-exit
+conditional      = 'if' {ws expression ws code-block}1+ [ws 'else' ws code-block]
+case             = 'case' ws expression {ws expression ws code-block}1+ [ws 'else' ws code-block]
+when             = expression ws 'when' ws expression
+unless           = expression ws 'unless' ws expression
+loop             = 'loop' [ws instance-name] ws code-block
+loop-exit        = 'exit' [ws instance-name]
+nil-coalescing   = expression ws '??' ws expression
+sync-block       = 'sync' ws code-block
+race-block       = 'race' ws code-block
+branch-block     = 'branch' ws expression
+change-mind      = 'change' ws expression ws expression
 
 Parameters:
 ----------------------
@@ -251,6 +259,7 @@ class SkMethodBase;
 class SkMethodCallBase;
 class SkMethodFunc;
 class SkMethodToOperator;
+class SkNilCoalescing;
 class SkObjectID;
 class SkParameterBase;
 class SkTypedClass;
@@ -376,7 +385,7 @@ class SK_API SkParser : public AString
       Result_err_expected_literal_symbol_end, // A symbol literal must end with a single quote [']
       Result_err_expected_loop_block,         // Expected a loop code block [ ], but did not receive one.
       Result_err_expected_loop_exit,          // A loop exit must begin with 'exit'.
-      Result_err_expected_meta_key,           // Expected a class meta key name (demand_load, object_id_lookup or object_id_validate).
+      Result_err_expected_meta_key,           // * Expected a class meta key name (demand_load, object_id_validate, or annotations).
       Result_err_expected_meta_value,         // * Expected a particular type of class meta value and did not get it.
       Result_err_expected_method_ctor_name,   // A constructor method name must begin with an exclamation mark '!' and be optionally followed by an identifier starting with a lowercase letter.
       Result_err_expected_method_name,        // A method name must begin with a lowercase letter or an exclamation mark '!'
@@ -450,7 +459,6 @@ class SK_API SkParser : public AString
       Result_err_context_duped_param_name,    // Argument with the same name already present in the parameter list
       Result_err_context_duped_rparam_name,   // Argument with the same name already present in the return parameter list
       Result_err_context_duped_variable,      // A variable with the same name is already present in the current scope
-      Result_err_context_infer_cast,          // * Unable to infer cast type.
       Result_err_context_invoke_arg1,         // Argument passed to routine that has no parameters.
       Result_err_context_invoke_arg_end,      // Expected the end of the invocation list ')', but did not find it.  [Too many arguments supplied?]
       Result_err_context_invoke_arg_missing,  // One or more arguments that do not have a default expression were not supplied.
@@ -480,12 +488,14 @@ class SK_API SkParser : public AString
       Result_err_typecheck_closure_generics,  // Generic types are not supported in closure parameter lists and might never be - too many levels of indirection to wrap your head around
       Result_err_typecheck_conversion,        // The result type of a conversion method must be of the same type as or a subclass of the method name.
       Result_err_typecheck_default_param,     // The result type of the default expression was not compatible with the specified parameter type.
+      Result_err_typecheck_infer,             // * Unable to infer type.
       Result_err_typecheck_invoke_arg,        // * Supplied argument is not of the expected class type.
       Result_err_typecheck_invoke_apply_recv, // Cannot do an invoke apply [receiver%invocation()] on a receiver that is guaranteed to be nil.
       Result_err_typecheck_list,              // Expected a List class or subclass, but given a non-list class.
       Result_err_typecheck_list_item,         // Supplied list item is not of the specified desired class type.
-      Result_err_typecheck_operand,           // Operand argument supplied to operator method is not of the expected class type.
       Result_err_typecheck_member_retype,     // * Invalid member type change.  A data member can only be rebound to objects of the type specified in its declaration.
+      Result_err_typecheck_operand,           // * Operand argument supplied to operator method is not of the expected class type.
+      Result_err_typecheck_nil_union,         // * Expected a union class that includes None(nil)
       Result_err_typecheck_query_data,        // * Query/predicate data members ending with a question mark '?' must be specified as a Boolean or omit the type in which case Boolean is inferred.
       Result_err_typecheck_query_result,      // * Query/predicate methods ending with a question mark '?' must either specify a Boolean result or omit the result type in which case Boolean is inferred.
       Result_err_typecheck_query_variable,    // * Query/predicate temporary variables ending with a question mark '?' must only be bound ':' to Boolean objects - true/false.
@@ -507,7 +517,7 @@ class SK_API SkParser : public AString
       Identify_normal_text,
       Identify_reserved_word,
       Identify_class,          // Verified as an existing class
-      Identify_class_like,     // Looks like a class, but not verified to be an existing class
+      Identify_class_like,     // Looks like alass, but not verified to be an existing class
       Identify_operator,
       Identify_op_group_open,  // ( { [
       Identify_op_group_close, // ) } [
@@ -524,9 +534,15 @@ class SK_API SkParser : public AString
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     enum eIdentifyFlag
       {
-      IdentifyFlag_none         = 0,
-      IdentifyFlag_dquote_as_op = 1 << 0,  // Treat double quote as operator rather than string literal. Useful for search fields that group exact phrases with double quotes.
-      IdentifyFlag__default     = IdentifyFlag_none
+      IdentifyFlag_none            = 0,
+      IdentifyFlag_break_strings   = 1 << 0,  // Treat only double quote as string and the sub parts of the string identified as code. Useful for search fields that group exact phrases with double quotes.
+      IdentifyFlag_break_symbols   = 1 << 1,  // Treat only single quote as symbol and the sub parts of the string identified as code. Useful for search fields that group exact phrases with double quotes.
+      IdentifyFlag_break_comments  = 1 << 2,  // Treat internals of comments as regular code
+
+      // Use for word break logic in editors so long sections such as comments have their internals treated separately rather than as a big atomic chunk.
+      IdentifyFlag__word_break     = IdentifyFlag_break_strings | IdentifyFlag_break_symbols | IdentifyFlag_break_comments,
+
+      IdentifyFlag__default        = IdentifyFlag_none
       };
 
 
@@ -621,11 +637,31 @@ class SK_API SkParser : public AString
       };
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Information about the invocation(s) currently being parsed - used only for probe parsing
+    struct SK_API InvocationInfo
+      {
+      InvocationInfo(const SkParameters * params_p = nullptr, uint32_t pos = 0)
+        : m_params_p(params_p)
+        , m_pos(pos)
+        , m_param_idx(0)
+      {}
+
+      bool is_set() const { return !!m_params_p; }
+
+      const SkParameters *  m_params_p;  // Parameters being invoked
+      uint32_t              m_pos;       // Current parsing position
+      uint32_t              m_param_idx; // Index of current parameter being parsed
+      };
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Used to simplify the arguments passed to the common parse methods
     // 
     // Author(s): Conan Reis
     struct SK_API Args
       {
+
+      typedef bool (*tSkProbeFunc)(const SkParser * parser_p, const Args & args);
+
       // Data Members
 
         // IN Data
@@ -641,8 +677,8 @@ class SK_API SkParser : public AString
           // Optional user data to be used by m_idx_probe_func if set.
           uintptr_t m_idx_probe_user;
 
-          // Callback function to invoke once index probe point reached.
-          bool (* m_idx_probe_func)(SkParser * parser_p, Args & args);
+          // Callback function to invoke at every probe location
+          tSkProbeFunc m_idx_probe_f;
 
         // IN/OUT Data
 
@@ -654,6 +690,9 @@ class SK_API SkParser : public AString
           // We use ARefPtr because we might want the receiver type to stay around after the parse 
           // while this Args object is still alive
           SkClassDescBase * m_receiver_type_p;
+
+          // Invocation(s) whose parameters are being currently parsed - used only for probe parsing
+          AVArray<InvocationInfo> m_invocation_stack;
 
           // Whether upcoming parse should be immediate (method), durational (coroutine)
           // or either - see `eSkInvokeTime` and `m_exec_time`
@@ -712,7 +751,7 @@ class SK_API SkParser : public AString
         Args & reset();
         Args & reset(uint32_t start_pos);
         Args & set_start(uint32_t start_pos)  { m_start_pos = start_pos; return *this; }
-        Args & set_idx_probe(uint32_t idx_probe, bool (* idx_probe_func)(SkParser * parser_p, Args & args) = nullptr, uintptr_t user_data = 0u);
+        Args & set_idx_probe(uint32_t idx_probe, tSkProbeFunc idx_probe_func = nullptr, uintptr_t user_data = 0u);
 
         bool is_ok() const                { return (m_result == Result_ok); }
         bool is_struct_wanted() const     { return (m_flags & ArgFlag_make_struct) != 0u; }
@@ -820,7 +859,6 @@ class SK_API SkParser : public AString
       eResult parse_comment_multiline(    uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr) const;
       eResult parse_comment(              uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr) const;
       eResult parse_data_definition(      uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr, bool append_to_class_b = true) const;
-      eResult parse_literal_char(         uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr, char * ch_p = nullptr) const;
       eResult parse_literal_char_esc_seq( uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr, char * ch_p = nullptr) const;
       eResult parse_literal_integer(      uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr, tSkInteger * int_p = nullptr, uint32_t * radix_p = nullptr) const;
       eResult parse_literal_real(         uint32_t start_pos = 0u, uint32_t * end_pos_p = nullptr, tSkReal * real_p = nullptr, bool int_as_real_b = true) const;
@@ -960,13 +998,13 @@ class SK_API SkParser : public AString
 
     // Internal Interface/Parameter Methods
 
-      bool parse_parameters(Args & args, SkParameters * params_p = nullptr, uint32_t flags = ParamFlag__default, uint32_t annotation_flags = SkAnnotation__default) const;
+      bool parse_parameters(     Args & args, SkParameters * params_p = nullptr, uint32_t flags = ParamFlag__default, uint32_t annotation_flags = SkAnnotation__default) const;
+      bool parse_param_append(   Args & args, SkParameters * params_p, uint32_t param_flags, uint32_t annotation_flags) const;
+      bool parse_parameter(      Args & args, SkParameterBase ** param_new_pp, uint32_t annotation_flags) const;
+      bool parse_parameter_unary(Args & args, SkUnaryParam * uparam_p, uint32_t annotation_flags) const;
 
-      eResult parse_parameter(            uint32_t start_pos, uint32_t * end_pos_p, SkParameterBase ** param_new_pp, uint32_t annotation_flags) const;
       eResult parse_parameter_specifier(  uint32_t start_pos, uint32_t * end_pos_p, SkTypedName * tname_p, uint32_t param_flags, uint32_t annotation_flags) const;
-      eResult parse_parameter_unary(      uint32_t start_pos, uint32_t * end_pos_p, SkUnaryParam * uparam_p, uint32_t annotation_flags) const;
       eResult parse_parameter_group(      uint32_t start_pos, uint32_t * end_pos_p, SkGroupParam * vparam_p, uint32_t annotation_flags) const;
-      eResult parse_param_append(         uint32_t start_pos, uint32_t * end_pos_p, SkParameters * params_p, uint32_t param_flags, uint32_t annotation_flags) const;
       eResult parse_param_return_append(  uint32_t start_pos, uint32_t * end_pos_p, SkParameters * params_p, uint32_t param_flags, uint32_t annotation_flags) const;
 
       eResult preparse_param_append(      uint32_t start_pos, uint32_t * end_pos_p, SkParameters * params_p, uint32_t param_flags, uint32_t annotation_flags) const;
@@ -1001,17 +1039,18 @@ class SK_API SkParser : public AString
         SkIdentifierLocal *  parse_data_accessor(Args & args, SkExpressionBase * owner_p) const;
         SkExpressionBase *   parse_expression_string(Args & args, SkExpressionBase ** receiver_pp) const;
         SkInvokeCascade *    parse_invoke_cascade(Args & args, SkExpressionBase * receiver_p) const;
-        SkExpressionBase *   parse_invoke_instantiate(Args & args, SkExpressionBase * receiver_p, bool * is_raw_data_pass_through_copy_p) const;
+        SkExpressionBase *   parse_invoke_instantiate(Args & args, SkExpressionBase * receiver_p, bool * is_raw_redundant_copy_p) const;
         SkInvokeSync *       parse_invoke_apply(Args & args, SkExpressionBase * receiver_p) const;
         SkInvokeRace *       parse_invoke_race(Args & args, SkExpressionBase * receiver_p) const;
         SkExpressionBase *   parse_invoke_operator(Args & args, SkExpressionBase * receiver_p) const;
         SkInvocation *       parse_invoke_index_operator(Args & args, SkExpressionBase * receiver_p) const;
-        SkMethodCallBase *   parse_invoke_method(Args & args) const;
+        SkMethodCallBase *   parse_invoke_method(Args & args, SkExpressionBase ** receiver_pp = nullptr) const;
         SkMethodCallBase *   parse_invoke_instance_method_arg1(Args & args, SkMethodBase * method_p, SkExpressionBase * arg1_p) const;
         SkMethodCallBase *   parse_invoke_ctor(Args & args) const;
-        SkInvokeBase *       parse_invoke_selector(Args & args, bool test_op) const;
+        SkInvokeBase *       parse_invoke_selector(Args & args, bool test_op, SkExpressionBase ** receiver_pp = nullptr) const;
         SkCoroutineCall *    parse_invoke_coroutine(Args & args) const;
         SkExpressionBase *   parse_modifier_tail(Args & args, SkExpressionBase * expr_p) const;
+        SkNilCoalescing *    parse_nil_coalescing_tail(Args & args, SkExpressionBase * receiver_p) const;
         SkMethodCallBase *   parse_operator_call(Args & args) const;
 
         bool      parse_invoke_args_arg1(Args & args, SkExpressionBase * arg1_p, APCompactArray<SkExpressionBase> * args_p = nullptr, const SkMethodBase * method_p = nullptr) const;
