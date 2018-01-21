@@ -104,7 +104,6 @@ class SK_API SkBrain
     // Common Classes
 
       static SkClass * ms_boolean_class_p;
-      static SkClass * ms_char_class_p;
       static SkClass * ms_class_class_p;  // In practice, the metaclass "<Object>" is used instead of "Class"
       static SkClass * ms_closure_class_p;
       static SkClass * ms_debug_class_p;

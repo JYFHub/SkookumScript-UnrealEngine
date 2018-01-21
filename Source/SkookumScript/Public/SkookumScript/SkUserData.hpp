@@ -79,22 +79,20 @@ struct SkUserData : private SkUserDataBase
 
 template<> inline tSkInteger * SkUserDataBase::as<tSkInteger>() const { return as_stored<tSkInteger>(); }
 template<> inline tSkReal    * SkUserDataBase::as<tSkReal   >() const { return as_stored<tSkReal   >(); }
-template<> inline tSkChar    * SkUserDataBase::as<tSkChar   >() const { return as_stored<tSkChar   >(); }
 template<> inline tSkBoolean * SkUserDataBase::as<tSkBoolean>() const { return as_stored<tSkBoolean>(); }
 template<> inline tSkEnum    * SkUserDataBase::as<tSkEnum   >() const { return as_stored<tSkEnum   >(); }
-template<> inline AString       * SkUserDataBase::as<AString      >() const { return as_stored<AString      >(); }
-template<> inline ASymbol       * SkUserDataBase::as<ASymbol      >() const { return as_stored<ASymbol      >(); }
+template<> inline AString    * SkUserDataBase::as<AString   >() const { return as_stored<AString      >(); }
+template<> inline ASymbol    * SkUserDataBase::as<ASymbol   >() const { return as_stored<ASymbol      >(); }
 
 //---------------------------------------------------------------------------------------
 // A few common specializations of SkUserDataBase::set()
 
 template<> inline void SkUserDataBase::set(const tSkInteger & value) { *as_stored<tSkInteger>() = value; }
 template<> inline void SkUserDataBase::set(const tSkReal    & value) { *as_stored<tSkReal   >() = value; }
-template<> inline void SkUserDataBase::set(const tSkChar    & value) { *as_stored<tSkChar   >() = value; }
 template<> inline void SkUserDataBase::set(const tSkBoolean & value) { *as_stored<tSkBoolean>() = value; }
 template<> inline void SkUserDataBase::set(const tSkEnum    & value) { *as_stored<tSkEnum   >() = value; }
-template<> inline void SkUserDataBase::set(const AString       & value) { *as_stored<AString      >() = value; }
-template<> inline void SkUserDataBase::set(const ASymbol       & value) { *as_stored<ASymbol      >() = value; }
+template<> inline void SkUserDataBase::set(const AString    & value) { *as_stored<AString      >() = value; }
+template<> inline void SkUserDataBase::set(const ASymbol    & value) { *as_stored<ASymbol      >() = value; }
 
 //---------------------------------------------------------------------------------------
 // Gets an object stored in this data structure cast to the desired type

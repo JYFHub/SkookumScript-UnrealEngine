@@ -7,7 +7,7 @@
 //   if vec.zero? [do_stuff()]
 //   do_stuff() when vec.zero?
 //
-// # See:       zero()
+// # See:       zero(), transform_by
 // # Author(s): Conan Reis
 //---------------------------------------------------------------------------------------
 

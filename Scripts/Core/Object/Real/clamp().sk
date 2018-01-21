@@ -1,11 +1,17 @@
 //---------------------------------------------------------------------------------------
-// Description Ensures that this number is inclusively between the supplied min and max
-//             values and if it is over or under then set it to min or max - whichever it
-//             is closest to.
-// Returns     itself
-// Examples    num.clamp(0.0, 10.0)
-// Author(s)   Conan Reis
+// Ensures that this number is inclusively between the supplied min and max values and
+// if it is over or under then modify it to min or max - whichever it is closest to.
+//
+// Returns: itself
+//
+// Examples:
+//   !num: 11.0
+//   num.clamp(0 10)  // changes num to 10.0
 //---------------------------------------------------------------------------------------
 
-(Real min, Real max) Real
+// Deprecated - use <Real>@clamp() instead
+
+( Real min_value
+  Real max_value
+) Real
 
