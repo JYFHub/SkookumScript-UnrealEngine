@@ -5,9 +5,9 @@
 // # Returns: squared distance between this vector and the origin
 //
 // # Examples:
-//  !len_sq: vec.length_sq
+//  !len_sq: vec.length_squared
 //
-// # See:       length(), distance(), distance_sq()
+// # See:       length(), distance(), distance_squared()
 // # Notes:     This is a tiny bit faster than calling `length()`
 // # Author(s): Conan Reis
 //---------------------------------------------------------------------------------------

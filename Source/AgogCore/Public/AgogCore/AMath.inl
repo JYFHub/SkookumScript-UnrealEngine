@@ -25,6 +25,7 @@
 // Includes
 //=======================================================================================
 
+#include <cmath>
 #ifndef A_PLAT_PC32
   #include <math.h>
 #endif
@@ -233,6 +234,7 @@
   // Author(s):   Conan Reis
   A_INLINE int a_round(f32 f)
     {
+    // $Revisit - Consider changing to std::lround()
     return int(f + 0.5f);
     }
 
@@ -611,7 +613,20 @@ A_INLINE f32 a_hypot(
 A_INLINE f32 a_lerp(
   f32 va, f32 vb, f32 t)
   {
+  // May not result in vb when t = 1 due to floating-point arithmetic error.
   return va + t * (vb - va);
+
+  // Precise mechanism, which guarantees result = vb when t = 1.
+  //return ((1.0f - t) * va) + (t * vb);
+  }
+
+//---------------------------------------------------------------------------------------
+// Author(s):   Conan Reis
+A_INLINE int32_t a_lerp_round(
+  int32_t va, int32_t vb, f32 t)
+  {
+  using namespace std; // To get lround to compile on all platforms
+  return va + int32_t(lround(static_cast<double>(t) * (vb - va)));
   }
 
 //---------------------------------------------------------------------------------------

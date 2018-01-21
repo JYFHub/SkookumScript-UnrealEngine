@@ -1,7 +1,7 @@
 {
 	"Changelist" : 3533248,
 	"CompatibleChangelist" : 3313651,
-	"BuildId" : "380593f3-bfb8-444e-bc15-f0cca1443af3",
+	"BuildId" : "d4fbc09e-4134-4e05-8bf4-51cb96dcc426",
 	"Modules" : 
 	{
 		"SkookumScriptGenerator" : "UnrealHeaderTool-SkookumScriptGenerator.dll"
