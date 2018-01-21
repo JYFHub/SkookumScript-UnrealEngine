@@ -687,11 +687,24 @@ template<class _BindingClass, typename _DataType, typename _CastType>
 void SkUEClassBindingHelper::initialize_array_from_list(TArray<_DataType> * out_array_p, const SkInstanceList & list)
   {
   APArray<SkInstance> & instances = list.get_instances();
-  out_array_p->Reserve(instances.get_length());
-  for (auto & instance_p : instances)
+  uint32                length    = instances.get_length();
+
+  if (length == 0u)
     {
-    uint32 index = out_array_p->AddUninitialized();
-    set_from_instance<_BindingClass, _DataType, _CastType>(&(*out_array_p)[index], instance_p);
+    return;
+    }
+
+  out_array_p->AddDefaulted(length);
+
+  _DataType *   out_items_p      = out_array_p->GetData();
+  SkInstance ** instances_pp     = instances.get_array();
+  SkInstance ** instances_end_pp = instances_pp + length;
+
+  while (instances_pp < instances_end_pp)
+    {
+    set_from_instance<_BindingClass, _DataType, _CastType>(out_items_p, *instances_pp);
+    out_items_p++;
+    instances_pp++;
     }
   }
 

@@ -1,16 +1,21 @@
 //---------------------------------------------------------------------------------------
-// Description Minimum - returns *reference* to either this number or num if it is smaller.
-//             The original number remains unchanged.
-// Returns     *reference* to either this number or num if it is smaller
-// Arg         num - number to compare
-// Examples    do_stuff(num.min(100.0))
-//             num := num.min(100.0)
+// Minimum - returns *reference* to either this number or num if it is smaller.
+// The original number remains unchanged.
 //
-//             !num1:  3.0
-//             !num2:  42.0
-//             num1.min(num2)    // returns reference to num1/3.0
+// Params:
+//   num: number to compare
 //
-// Author(s)   Conan Reis
+// Returns: *reference* to either this number or num if it is smaller
+//
+// Examples
+//   do_stuff(num.min(100.0))
+//   num := num.min(100.0)
+//
+//   !num1:  3.0
+//   !num2:  42.0
+//   num1.min(num2)    // returns reference to num1/3.0
+//
+// See: max(), class version of min() and max()
 //---------------------------------------------------------------------------------------
 
 (Real num) Real

@@ -1,0 +1,22 @@
+//---------------------------------------------------------------------------------------
+// Determines the hypotenuse of a right triangle - the triangle's longest side opposite
+// the right angle.
+// hypotenuse = sqrt(x^2 + y^2)
+//
+// https://en.wikipedia.org/wiki/Hypotenuse
+// http://mathworld.wolfram.com/Hypotenuse.html
+// 
+// Returns: length of the hypotenuse
+//
+// Examples:
+//   !num: Real.reciprocal(4)     // returns .25
+//   real_arg(Real.reciprocal(4))
+//   real_arg(reciprocal(4))      // Real. is inferred
+//   num := reciprocal(4)         // modifies itself with result
+//
+// See: cos(), sin(), tan(), acos(), asin(), atan2()
+//---------------------------------------------------------------------------------------
+
+( Real x
+  Real y
+) Real

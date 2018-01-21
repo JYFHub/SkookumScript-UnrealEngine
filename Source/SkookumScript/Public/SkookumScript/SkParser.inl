@@ -80,9 +80,10 @@ A_INLINE SkParser::Args::Args(const Args & args) :
   m_flags(args.m_flags),
   m_idx_probe(args.m_idx_probe),
   m_idx_probe_user(args.m_idx_probe_user),
-  m_idx_probe_func(args.m_idx_probe_func),
+  m_idx_probe_f(args.m_idx_probe_f),
   m_desired_type_p(args.m_desired_type_p),
   m_receiver_type_p(args.m_receiver_type_p),
+  m_invocation_stack(args.m_invocation_stack),
   m_start_pos(args.m_start_pos),
   m_end_pos(args.m_end_pos),
   m_result(args.m_result),
@@ -97,16 +98,17 @@ A_INLINE SkParser::Args::Args(const Args & args) :
 // Author(s):   Conan Reis
 A_INLINE SkParser::Args & SkParser::Args::operator=(const Args & args)
   {
-  m_flags           = args.m_flags;
-  m_idx_probe       = args.m_idx_probe;
-  m_idx_probe_func  = args.m_idx_probe_func;
-  m_idx_probe_user  = args.m_idx_probe_user;
-  m_start_pos       = args.m_start_pos;
-  m_end_pos         = args.m_end_pos;
-  m_result          = args.m_result;
-  m_expr_type       = args.m_expr_type;
-  m_desired_type_p  = args.m_desired_type_p;
-  m_receiver_type_p = args.m_receiver_type_p;
+  m_flags            = args.m_flags;
+  m_idx_probe        = args.m_idx_probe;
+  m_idx_probe_f      = args.m_idx_probe_f;
+  m_idx_probe_user   = args.m_idx_probe_user;
+  m_start_pos        = args.m_start_pos;
+  m_end_pos          = args.m_end_pos;
+  m_result           = args.m_result;
+  m_expr_type        = args.m_expr_type;
+  m_desired_type_p   = args.m_desired_type_p;
+  m_receiver_type_p  = args.m_receiver_type_p;
+  m_invocation_stack = args.m_invocation_stack;
 
   return *this;
   }
@@ -120,7 +122,7 @@ A_INLINE SkParser::Args & SkParser::Args::reset()
   {
   m_flags           = ArgFlag__default;
   m_idx_probe       = 0u;
-  m_idx_probe_func  = nullptr;
+  m_idx_probe_f     = nullptr;
   m_start_pos       = 0u;
   m_expr_type       = nullptr;
   m_desired_type_p  = nullptr;
@@ -141,11 +143,12 @@ A_INLINE SkParser::Args & SkParser::Args::reset(uint32_t start_pos)
   {
   m_flags           = ArgFlag__default;
   m_idx_probe       = 0u;
-  m_idx_probe_func  = nullptr;
+  m_idx_probe_f     = nullptr;
   m_start_pos       = start_pos;
   m_expr_type       = nullptr;
   m_desired_type_p  = nullptr;
   m_receiver_type_p = nullptr;
+  m_invocation_stack.empty();
 
   // Note that some of the "out" data is left unmodified
 
@@ -154,14 +157,14 @@ A_INLINE SkParser::Args & SkParser::Args::reset(uint32_t start_pos)
 
 //---------------------------------------------------------------------------------------
 A_INLINE SkParser::Args & SkParser::Args::set_idx_probe(
-  uint32_t  idx_probe,
-  bool (*   idx_probe_func)(SkParser * parser_p, Args & args), // = nullptr
-  uintptr_t user_data // = 0u
+  uint32_t     idx_probe,
+  tSkProbeFunc idx_probe_func, // = nullptr
+  uintptr_t    user_data // = 0u
   )
   {
-  m_flags |= ArgFlag_parse_to_idx_probe;
+  m_flags         |= ArgFlag_parse_to_idx_probe;
   m_idx_probe      = idx_probe;
-  m_idx_probe_func = idx_probe_func;
+  m_idx_probe_f    = idx_probe_func;
   m_idx_probe_user = user_data;
 
   return *this;
@@ -184,8 +187,7 @@ A_INLINE SkParser::Args & SkParser::Args::set_idx_probe(
 A_INLINE bool SkParser::Args::is_idx_probe_halt(const SkParser * parser_p)
   {
   // Shall we bail or continue?
-  if ((m_idx_probe_func == nullptr) 
-    || (m_idx_probe_func)(const_cast<SkParser *>(parser_p), *this))
+  if (m_idx_probe_f ? (m_idx_probe_f)(parser_p, *this) : m_end_pos >= m_idx_probe)
     {
     // Halt parse and return probe info
     m_result = Result__idx_probe;
