@@ -1,4 +1,4 @@
-﻿//=======================================================================================
+//=======================================================================================
 // Copyright (c) 2001-2017 Agog Labs Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ public class SkookumScript : ModuleRules
       case UnrealTargetPlatform.Win64:
         bPlatformAllowed = true;
         platformName = Target.Platform == UnrealTargetPlatform.Win64 ? "Win64" : "Win32";
-        platPathSuffixes.Add(Path.Combine(platformName, Target.WindowsPlatform.Compiler == WindowsCompiler.VisualStudio2015 ? "VS2015" : "VS2013"));
+        platPathSuffixes.Add(Path.Combine(platformName, Target.WindowsPlatform.Compiler == WindowsCompiler.VisualStudio2015 || Target.WindowsPlatform.Compiler == WindowsCompiler.VisualStudio2017 ? "VS2015" : "VS2013"));
         libNameExt = ".lib";
         libNamePrefix = "";
         break;

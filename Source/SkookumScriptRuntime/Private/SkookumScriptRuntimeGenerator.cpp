@@ -29,6 +29,7 @@
 #include "Engine/UserDefinedStruct.h"
 #include "ISourceControlModule.h"
 #include "ISourceControlProvider.h"
+#include "Interfaces/IMainFrameModule.h"
 
 #include "Bindings/SkUEReflectionManager.hpp"
 #include "Bindings/SkUEUtils.hpp"
@@ -419,16 +420,21 @@ bool FSkookumScriptRuntimeGenerator::source_control_checkout_or_add(const FStrin
     return true;
     }
 
-  // Call UE4 implementation to do the work
-  if (USourceControlHelpers::CheckOutFile(file_path))
+  // Hack for 4.18 - the source control module will crash if the main frame is not initialized yet
+  IMainFrameModule * main_frame_module_p = FModuleManager::GetModulePtr<IMainFrameModule>("MainFrame");
+  if (main_frame_module_p && main_frame_module_p->IsWindowInitialized())
     {
-    // If successful, also check out all the queued file paths
-    for (const FString & queued_file_path : m_queued_files_to_checkout)
+    // Call UE4 implementation to do the work
+    if (USourceControlHelpers::CheckOutFile(file_path))
       {
-      USourceControlHelpers::CheckOutFile(queued_file_path);
+      // If successful, also check out all the queued file paths
+      for (const FString & queued_file_path : m_queued_files_to_checkout)
+        {
+        USourceControlHelpers::CheckOutFile(queued_file_path);
+        }
+      m_queued_files_to_checkout.Empty();
+      return true;
       }
-    m_queued_files_to_checkout.Empty();
-    return true;
     }
 
   // Cannot check out now - remember for later checkout

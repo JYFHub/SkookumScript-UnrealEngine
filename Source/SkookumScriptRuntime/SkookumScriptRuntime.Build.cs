@@ -71,8 +71,9 @@ namespace UnrealBuildTool.Rules
         );
 
       if (Target.bBuildEditor)
-        {
+      {
         PrivateDependencyModuleNames.Add("UnrealEd");
+        PrivateDependencyModuleNames.Add("MainFrame");
         PrivateDependencyModuleNames.Add("KismetCompiler");
         PrivateDependencyModuleNames.Add("SourceControl");
       }

@@ -35,6 +35,10 @@
 #include "UObject/Package.h"
 #include "UObject/UObjectHash.h"
 #include "Engine/UserDefinedStruct.h"
+#include "Modules/ModuleManager.h"
+#if WITH_EDITOR
+#include "Kismet2/KismetReinstanceUtilities.h"
+#endif
 
 #include <SkookumScript/SkExpressionBase.hpp>
 #include <SkookumScript/SkInvokedCoroutine.hpp>
@@ -789,6 +793,15 @@ bool SkUEReflectionManager::add_instance_property_to_class(UClass * ue_class_p, 
     *prev_pp = property_p;
     // Relink special pointers
     ue_class_p->StaticLink(true);
+
+    #if WITH_EDITOR
+      // Reinstance potentially existing objects of this class
+      TMap<UClass*, UClass*> classes_to_reinstance;
+      classes_to_reinstance.Add(ue_class_p, ue_class_p);
+      TGuardValue<bool> hotreload_guard(GIsHotReload, true); // Pretend it's hot reload to allow replacing the class with itself
+      TGuardValue<bool> reinstancing_guard(GIsReinstancing, true);
+      FBlueprintCompileReinstancer::BatchReplaceInstancesOfClass(classes_to_reinstance);
+    #endif
 
     // Something changed!
     success = true;
