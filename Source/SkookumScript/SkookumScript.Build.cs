@@ -68,7 +68,7 @@ public class SkookumScript : ModuleRules
         // On Mac, in library mode, always assume DLL since libs are universal for both dylib and static builds
         if (!bFullSource)
         {
-          Definitions.Add("SK_IS_DLL");
+          PublicDefinitions.Add("SK_IS_DLL");
         }
         break;
       case UnrealTargetPlatform.Linux:
@@ -116,18 +116,18 @@ public class SkookumScript : ModuleRules
     {
       case UnrealTargetConfiguration.Debug:
       case UnrealTargetConfiguration.DebugGame:
-        Definitions.Add("SKOOKUM=31");
+        PublicDefinitions.Add("SKOOKUM=31");
         libNameSuffix = useDebugCRT ? "-Debug" : "-DebugCRTOpt";
         break;
 
       case UnrealTargetConfiguration.Development:
       case UnrealTargetConfiguration.Test:
-        Definitions.Add("SKOOKUM=31");
+        PublicDefinitions.Add("SKOOKUM=31");
         libNameSuffix = "-Development";
         break;
 
       case UnrealTargetConfiguration.Shipping:
-        Definitions.Add("SKOOKUM=8");
+        PublicDefinitions.Add("SKOOKUM=8");
         libNameSuffix = "-Shipping";
         break;
     }
@@ -137,7 +137,7 @@ public class SkookumScript : ModuleRules
 
     if (!bIsMonolithic)
     {
-      Definitions.Add("SK_IS_DLL");
+      PublicDefinitions.Add("SK_IS_DLL");
     }
 
     // Public include paths

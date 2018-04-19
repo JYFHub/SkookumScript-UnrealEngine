@@ -97,7 +97,7 @@ class SKOOKUMSCRIPTRUNTIME_API USkookumScriptListener : public UObject
 
     static EventInfo *  alloc_event();
     void                push_event_and_resume(EventInfo * event_p, uint32_t num_arguments);
-    static void         add_dynamic_function(FName callback_name, UClass * callback_owner_class_p, Native exec_p);
+    static void         add_dynamic_function(FName callback_name, UClass * callback_owner_class_p, FNativeFuncPtr exec_p);
     static void         remove_dynamic_function(FName callback_name);
 
   // Internal Data Members

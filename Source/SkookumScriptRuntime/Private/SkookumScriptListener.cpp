@@ -258,7 +258,7 @@ bool USkookumScriptListener::coro_wait_event(SkInvokedCoroutine * scope_p, tUnre
 
 //---------------------------------------------------------------------------------------
 
-void USkookumScriptListener::add_dynamic_function(FName callback_name, UClass * callback_owner_class_p, Native exec_p)
+void USkookumScriptListener::add_dynamic_function(FName callback_name, UClass * callback_owner_class_p, FNativeFuncPtr exec_p)
   {
   // Find the function
   UFunction * function_p = StaticClass()->FindFunctionByName(callback_name, EIncludeSuperFlag::ExcludeSuper);

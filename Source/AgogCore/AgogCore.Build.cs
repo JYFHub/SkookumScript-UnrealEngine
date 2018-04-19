@@ -44,7 +44,7 @@ public class AgogCore : ModuleRules
     var bMadCheck = File.Exists(Path.Combine(ModuleDirectory, "enable-mad-check.txt"));
     if (bMadCheck)
     {
-      Definitions.Add("A_MAD_CHECK");
+      PublicDefinitions.Add("A_MAD_CHECK");
     }
 
     // Add user define if exists (Agog Labs internal)
@@ -55,7 +55,7 @@ public class AgogCore : ModuleRules
       var userDefine = File.ReadAllText(userDefineFilePath).Trim();
       if (userDefine.Length > 0)
       {
-        Definitions.Add(userDefine);
+        PublicDefinitions.Add(userDefine);
       }
     }
 
@@ -84,11 +84,11 @@ public class AgogCore : ModuleRules
         platformName = "Mac";
         platPathSuffixes.Add(platformName);
         useDebugCRT = true;
-        Definitions.Add("A_PLAT_OSX");
+        PublicDefinitions.Add("A_PLAT_OSX");
         // On Mac, in library mode, always assume DLL since libs are universal for both dylib and static builds
         if (!bFullSource)
         {
-          Definitions.Add("A_IS_DLL");
+          PublicDefinitions.Add("A_IS_DLL");
         }
         break;
       case UnrealTargetPlatform.Linux:
@@ -96,7 +96,7 @@ public class AgogCore : ModuleRules
         platformName = "Linux";
         platPathSuffixes.Add(platformName);
         useDebugCRT = true;
-        Definitions.Add("A_PLAT_LINUX64");
+        PublicDefinitions.Add("A_PLAT_LINUX64");
         //UEBuildConfiguration.bForceEnableExceptions = true;
         break;
       case UnrealTargetPlatform.IOS:
@@ -104,14 +104,14 @@ public class AgogCore : ModuleRules
         platformName = "IOS";
         platPathSuffixes.Add(platformName);
         useDebugCRT = true;
-        Definitions.Add("A_PLAT_iOS");
+        PublicDefinitions.Add("A_PLAT_iOS");
         break;
       case UnrealTargetPlatform.TVOS:
         bPlatformAllowed = true;
         platformName = "TVOS";
         platPathSuffixes.Add(platformName);
         useDebugCRT = true;
-        Definitions.Add("A_PLAT_tvOS");
+        PublicDefinitions.Add("A_PLAT_tvOS");
         break;
       case UnrealTargetPlatform.Android:
         bPlatformAllowed = true;
@@ -121,17 +121,17 @@ public class AgogCore : ModuleRules
         platPathSuffixes.Add(Path.Combine(platformName, "x86"));
         platPathSuffixes.Add(Path.Combine(platformName, "x64"));
         useDebugCRT = true;
-        Definitions.Add("A_PLAT_ANDROID");
+        PublicDefinitions.Add("A_PLAT_ANDROID");
         break;
       case UnrealTargetPlatform.XboxOne:
         bPlatformAllowed = bFullSource;
         platformName = "XONE";
-        Definitions.Add("A_PLAT_X_ONE");
+        PublicDefinitions.Add("A_PLAT_X_ONE");
         break;
       case UnrealTargetPlatform.PS4:
         bPlatformAllowed = bFullSource;
         platformName = "PS4";
-        Definitions.Add("A_PLAT_PS4");
+        PublicDefinitions.Add("A_PLAT_PS4");
         break;
     }
 
@@ -141,20 +141,20 @@ public class AgogCore : ModuleRules
       case UnrealTargetConfiguration.Debug:
       case UnrealTargetConfiguration.DebugGame:
         libNameSuffix = useDebugCRT ? "-Debug" : "-DebugCRTOpt";
-        Definitions.Add("A_EXTRA_CHECK=1");
-        Definitions.Add("A_UNOPTIMIZED=1");
+        PublicDefinitions.Add("A_EXTRA_CHECK=1");
+        PublicDefinitions.Add("A_UNOPTIMIZED=1");
         break;
 
       case UnrealTargetConfiguration.Development:
       case UnrealTargetConfiguration.Test:
         libNameSuffix = "-Development";
-        Definitions.Add("A_EXTRA_CHECK=1");
+        PublicDefinitions.Add("A_EXTRA_CHECK=1");
         break;
 
       case UnrealTargetConfiguration.Shipping:
         libNameSuffix = "-Shipping";
-        Definitions.Add("A_SYMBOL_STR_DB=1");
-        Definitions.Add("A_NO_SYMBOL_REF_LINK=1");
+        PublicDefinitions.Add("A_SYMBOL_STR_DB=1");
+        PublicDefinitions.Add("A_NO_SYMBOL_REF_LINK=1");
         break;
     }
 
@@ -163,7 +163,7 @@ public class AgogCore : ModuleRules
 
     if (!bIsMonolithic)
     {
-      Definitions.Add("A_IS_DLL");
+      PublicDefinitions.Add("A_IS_DLL");
     }
 
     // Public include paths

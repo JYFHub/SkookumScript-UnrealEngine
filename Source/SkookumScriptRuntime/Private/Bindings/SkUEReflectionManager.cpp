@@ -824,10 +824,10 @@ bool SkUEReflectionManager::can_ue_property_be_reflected(UProperty * ue_property
 
 bool SkUEReflectionManager::is_skookum_reflected_call(UFunction * function_p)
   {
-  Native native_function_p = function_p->GetNativeFunc();
-  return native_function_p == (Native)&SkUEReflectionManager::exec_sk_class_method
-      || native_function_p == (Native)&SkUEReflectionManager::exec_sk_instance_method
-      || native_function_p == (Native)&SkUEReflectionManager::exec_sk_coroutine;
+  FNativeFuncPtr native_function_p = function_p->GetNativeFunc();
+  return native_function_p == (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_class_method
+      || native_function_p == (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_instance_method
+      || native_function_p == (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_coroutine;
   }
 
 //---------------------------------------------------------------------------------------
@@ -839,7 +839,7 @@ bool SkUEReflectionManager::is_skookum_reflected_event(UFunction * function_p)
 
 //---------------------------------------------------------------------------------------
 
-void SkUEReflectionManager::exec_sk_method(FFrame & stack, void * const result_p, SkClass * class_scope_p, SkInstance * this_p)
+void SkUEReflectionManager::exec_sk_method(UObject* context_p, FFrame & stack, void * const result_p, SkClass * class_scope_p, SkInstance * this_p)
   {
   const ReflectedCall & reflected_call = static_cast<const ReflectedCall &>(*ms_singleton_p->m_reflected_functions[stack.CurrentNativeFunction->RPCId]);
   SK_ASSERTX(reflected_call.m_type == ReflectedFunctionType_call, "ReflectedFunction has bad type!");
@@ -906,31 +906,31 @@ void SkUEReflectionManager::exec_sk_method(FFrame & stack, void * const result_p
 
 //---------------------------------------------------------------------------------------
 
-void SkUEReflectionManager::exec_sk_class_method(FFrame & stack, void * const result_p)
+void SkUEReflectionManager::exec_sk_class_method(UObject* context_p, FFrame & stack, void * const result_p)
   {
-  SkClass * class_scope_p = SkUEClassBindingHelper::get_object_class((UObject *)this);
-  exec_sk_method(stack, result_p, class_scope_p, nullptr);
+  SkClass * class_scope_p = SkUEClassBindingHelper::get_object_class(context_p);
+  exec_sk_method(context_p, stack, result_p, class_scope_p, nullptr);
   }
 
 //---------------------------------------------------------------------------------------
 
-void SkUEReflectionManager::exec_sk_instance_method(FFrame & stack, void * const result_p)
+void SkUEReflectionManager::exec_sk_instance_method(UObject* context_p, FFrame & stack, void * const result_p)
   {
-  SkInstance * this_p = SkUEEntity::new_instance((UObject *)this);
-  exec_sk_method(stack, result_p, this_p->get_class(), this_p);
+  SkInstance * this_p = SkUEEntity::new_instance(context_p);
+  exec_sk_method(context_p, stack, result_p, this_p->get_class(), this_p);
   this_p->dereference();
   }
 
 //---------------------------------------------------------------------------------------
 
-void SkUEReflectionManager::exec_sk_coroutine(FFrame & stack, void * const result_p)
+void SkUEReflectionManager::exec_sk_coroutine(UObject* context_p, FFrame & stack, void * const result_p)
   {
   const ReflectedCall & reflected_call = static_cast<const ReflectedCall &>(*ms_singleton_p->m_reflected_functions[stack.CurrentNativeFunction->RPCId]);
   SK_ASSERTX(reflected_call.m_type == ReflectedFunctionType_call, "ReflectedFunction has bad type!");
   SK_ASSERTX(reflected_call.m_sk_invokable_p->get_invoke_type() == SkInvokable_coroutine, "Must be a coroutine at this point.");
 
   // Get instance of this object
-  SkInstance * this_p = SkUEEntity::new_instance((UObject *)this);
+  SkInstance * this_p = SkUEEntity::new_instance(context_p);
 
   // Create invoked coroutine
   SkCoroutineBase * coro_p = static_cast<SkCoroutineBase *>(reflected_call.m_sk_invokable_p);
@@ -1502,8 +1502,8 @@ UFunction * SkUEReflectionManager::build_ue_function(UClass * ue_class_p, SkInvo
     {
     ue_function_p->FunctionFlags |= FUNC_BlueprintCallable | FUNC_Native;
     ue_function_p->SetNativeFunc(sk_invokable_p->get_invoke_type() == SkInvokable_coroutine 
-      ? (Native)&SkUEReflectionManager::exec_sk_coroutine
-      : (sk_invokable_p->is_class_member() ? (Native)&SkUEReflectionManager::exec_sk_class_method : (Native)&SkUEReflectionManager::exec_sk_instance_method));
+      ? (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_coroutine
+      : (sk_invokable_p->is_class_member() ? (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_class_method : (FNativeFuncPtr)&SkUEReflectionManager::exec_sk_instance_method));
     #if WITH_EDITOR
       ue_function_p->SetMetaData(TEXT("Tooltip"), *FString::Printf(TEXT("%S\n%S@%S()"), 
         sk_invokable_p->get_invoke_type() == SkInvokable_coroutine ? "Kick off SkookumScript coroutine" : "Call to SkookumScript method", 

@@ -1180,14 +1180,14 @@ FString FSkookumScriptGenerator::generate_event_binding_code(const FString & cla
     separator_p = TEXT(", ");
     }
   generated_code += TEXT("        P_FINISH;\n");
-  generated_code += FString::Printf(TEXT("        this->%s(%s);\n"), *binding.m_property_p->GetName(), *param_list);
+  generated_code += FString::Printf(TEXT("        static_cast<USkookumScriptListener_%s *>(Context)->%s(%s);\n"), *binding.m_property_p->GetName(), *binding.m_property_p->GetName(), *param_list);
   generated_code += TEXT("        }\n");
 
   // The install callback
   generated_code += FString::Printf(TEXT(
     "      static void install(UObject * obj_p, USkookumScriptListener * listener_p)\n"
     "        {\n"
-    "        add_dynamic_function(ms_name, obj_p->GetClass(), (Native)&USkookumScriptListener_%s::exec%s);\n"
+    "        add_dynamic_function(ms_name, obj_p->GetClass(), (FNativeFuncPtr)&USkookumScriptListener_%s::exec%s);\n"
     "        static_cast<%s *>(obj_p)->%s.AddDynamic(static_cast<USkookumScriptListener_%s *>(listener_p), &USkookumScriptListener_%s::%s);\n"
     "        }\n"),
     *binding.m_property_p->GetName(),

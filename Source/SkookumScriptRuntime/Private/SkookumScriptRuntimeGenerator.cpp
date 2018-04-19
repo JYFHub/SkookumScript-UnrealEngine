@@ -807,9 +807,9 @@ void FSkookumScriptRuntimeGenerator::update_class_script_file(UField * type_p, b
       }
     }
 #if !PLATFORM_EXCEPTIONS_DISABLED
-  catch (TCHAR * error_msg_p)
+  catch (const TCHAR * error_msg_p)
     {
-    checkf(false, error_msg_p);
+    checkf(false, TEXT("%s"), error_msg_p);
     }
 #endif
   }

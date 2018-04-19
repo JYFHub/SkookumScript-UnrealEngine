@@ -278,10 +278,10 @@ class SkUEReflectionManager
 
     typedef APSortedLogicalFree<ReflectedClass, ASymbol> tReflectedClasses;
 
-    void                exec_sk_method(FFrame & stack, void * const result_p, SkClass * class_scope_p, SkInstance * this_p);
-    void                exec_sk_class_method(FFrame & stack, void * const result_p);
-    void                exec_sk_instance_method(FFrame & stack, void * const result_p);
-    void                exec_sk_coroutine(FFrame & stack, void * const result_p);
+    static void         exec_sk_method(UObject * context_p, FFrame & stack, void * const result_p, SkClass * class_scope_p, SkInstance * this_p);
+    static void         exec_sk_class_method(UObject * context_p, FFrame & stack, void * const result_p);
+    static void         exec_sk_instance_method(UObject * context_p, FFrame & stack, void * const result_p);
+    static void         exec_sk_coroutine(UObject * context_p, FFrame & stack, void * const result_p);
 
     template<typename _EventType, typename _LambdaType>
     static void         invoke_k2_event(_EventType * reflected_event_p, SkInvokedMethod * scope_p, SkInstance ** result_pp, _LambdaType && invoker);
