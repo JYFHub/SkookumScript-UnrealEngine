@@ -9,10 +9,10 @@
 // Returns: length of the hypotenuse
 //
 // Examples:
-//   !num: Real.reciprocal(4)     // returns .25
-//   real_arg(Real.reciprocal(4))
-//   real_arg(reciprocal(4))      // Real. is inferred
-//   num := reciprocal(4)         // modifies itself with result
+//   !num: Real.hypot(3 4)     // returns 5.0
+//   real_arg(Real.hypot(3 4))
+//   real_arg(hypot(3 4))      // Real. is inferred
+//   num := hypot(3 4)         // modifies itself with result
 //
 // See: cos(), sin(), tan(), acos(), asin(), atan2()
 //---------------------------------------------------------------------------------------
