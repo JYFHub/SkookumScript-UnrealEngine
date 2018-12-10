@@ -112,7 +112,7 @@ template<class _BindingClass, typename _DataType>
 template<typename... tParamClasses>
 inline SkInstance * SkClassBindingBase<_BindingClass, _DataType>::new_instance(const tParamClasses & ... constructor_args)
   {
-  SkInstance * instance_p = SkInstance::new_instance(_BindingClass::get_class());
+  SkInstance * instance_p = _BindingClass::get_class()->new_instance();
 
   static_cast<_BindingClass *>(instance_p)->construct(constructor_args...);
 

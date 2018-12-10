@@ -124,7 +124,7 @@ println("Heads!") unless @@random.coin_toss
 
 //-----------------------------------------
 // Lists of stuff
-// Read more - http://skookumscript.com/docs/v3.0/lang/literals/list/
+// Read more - http://skookumscript.com/docs/v3.0/#list
 
 {1 2 3 4 5}.reverse                // Reverses the order of this list's items
 {1 -2 3 -4}%negate                 // Applies the method 'negate' to all items of the list, returns the result
