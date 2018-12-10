@@ -800,7 +800,7 @@ bool SkUEReflectionManager::add_instance_property_to_class(UClass * ue_class_p, 
       classes_to_reinstance.Add(ue_class_p, ue_class_p);
       TGuardValue<bool> hotreload_guard(GIsHotReload, true); // Pretend it's hot reload to allow replacing the class with itself
       TGuardValue<bool> reinstancing_guard(GIsReinstancing, true);
-      FBlueprintCompileReinstancer::BatchReplaceInstancesOfClass(classes_to_reinstance);
+      FBlueprintCompileReinstancer::BatchReplaceInstancesOfClass(classes_to_reinstance, false);
     #endif
 
     // Something changed!
@@ -1045,14 +1045,15 @@ void SkUEReflectionManager::mthd_invoke_k2_event(SkInvokedMethod * scope_p, SkIn
       {
       // Find Kismet copy of our method to invoke
       ue_function_p = reflected_event_p->m_ue_function_p.Get(); // Invoke the first one
-      #if WITH_EDITORONLY_DATA
-        if (!ue_function_p)
-          {
-          ue_function_p = find_ue_function(reflected_event_p->m_sk_invokable_p);
-          reflected_event_p->m_ue_function_p = ue_function_p;
-          SK_ASSERTX(ue_function_p, a_str_format("Cannot find UE counterpart of method %s@%s!", reflected_event_p->m_sk_invokable_p->get_scope()->get_name_cstr(), reflected_event_p->m_sk_invokable_p->get_name_cstr()));
-          }
-      #endif
+
+      // Just in time discovery of soft-referenced events
+      if (!ue_function_p)
+        {
+        ue_function_p = find_ue_function(reflected_event_p->m_sk_invokable_p);
+        reflected_event_p->m_ue_function_p = ue_function_p;
+        SK_ASSERTX(ue_function_p, a_str_format("Cannot find UE counterpart of method %s@%s!", reflected_event_p->m_sk_invokable_p->get_scope()->get_name_cstr(), reflected_event_p->m_sk_invokable_p->get_name_cstr()));
+        }
+
       ue_function_p = actor_p->FindFunctionChecked(*ue_function_p->GetName());
       reflected_event_p->m_ue_function_to_invoke_p = ue_function_p;
       reflected_event_p->m_ue_params_size = ue_function_p->ParmsSize;

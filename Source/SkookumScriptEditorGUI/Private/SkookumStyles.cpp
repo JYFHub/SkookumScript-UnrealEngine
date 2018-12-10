@@ -20,8 +20,8 @@
 
 #include "SkookumStyles.h"
 #include "Interfaces/IPluginManager.h"
-#include "SlateGameResources.h"
-#include "SlateStyle.h"
+#include "Slate/SlateGameResources.h"
+#include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 
 #define IMAGE_BRUSH( RelativePath, ... )  FSlateImageBrush(ms_singleton_p->RootToContentDir(RelativePath, TEXT(".png")), __VA_ARGS__)

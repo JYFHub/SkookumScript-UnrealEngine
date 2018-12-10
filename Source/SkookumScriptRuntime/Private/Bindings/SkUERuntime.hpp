@@ -29,7 +29,7 @@
 #include "../SkookumScriptListenerManager.hpp"
 #include "SkUEReflectionManager.hpp"
 
-#include "Platform.h"  // Set up base types, etc for the platform
+#include "HAL/Platform.h"  // Set up base types, etc for the platform
 
 #include <SkookumScript/SkRuntimeBase.hpp>
 #include <SkookumScript/SkParser.hpp>

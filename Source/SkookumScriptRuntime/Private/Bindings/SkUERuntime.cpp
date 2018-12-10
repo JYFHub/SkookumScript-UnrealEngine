@@ -31,7 +31,7 @@
 #include "SkUEClassBinding.hpp"
 #include "SkUEUtils.hpp"
 
-#include "GenericPlatformProcess.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
 #include "UObject/UObjectHash.h"
 #include "UObject/UObjectIterator.h"
 #include "Engine/Blueprint.h"

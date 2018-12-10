@@ -84,6 +84,8 @@ class FSkookumScriptRuntimeGenerator : public FSkookumScriptGeneratorBase
     void           update_used_class_script_files(bool allow_members);
     void           create_root_class_script_file(const TCHAR * sk_class_name_p);
 
+    bool           move_script_file(const FString & old_file_name, const FString & new_file_name);
+
     // FSkookumScriptGeneratorBase interface implementation
 
     virtual bool   can_export_property(UProperty * property_p, int32 include_priority, uint32 referenced_flags) override final;

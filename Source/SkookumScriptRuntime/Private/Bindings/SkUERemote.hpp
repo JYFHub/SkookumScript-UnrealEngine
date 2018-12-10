@@ -28,7 +28,7 @@
 
 #include "ISkookumScriptRuntime.h"
 
-#include "IPluginManager.h"
+#include "Interfaces/IPluginManager.h"
 #include "Networking.h"
 
 #include <AgogCore/ADatum.hpp>

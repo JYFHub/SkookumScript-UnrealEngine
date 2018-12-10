@@ -20,19 +20,19 @@
 
 #include "ISkookumScriptEditor.h"
 #include "CoreUObject.h"
-#include "ModuleManager.h"
 #include "Engine.h"
 #include "UnrealEd.h"
 #include "SlateBasics.h"
-#include "SlateGameResources.h" 
-#include "IPluginManager.h"
+#include "Slate/SlateGameResources.h" 
+#include "Interfaces/IMainFrameModule.h"
+#include "Interfaces/IPluginManager.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Kismet2/StructureEditorUtils.h"
 #include "Kismet2/EnumEditorUtils.h"
 #include "ISkookumScriptRuntime.h"
 #include "AssetRegistryModule.h"
 #include "BlueprintActionDatabase.h"
-#include "BlueprintEditorUtils.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Engine/UserDefinedEnum.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_Event.h"
@@ -83,6 +83,7 @@ protected:
   //---------------------------------------------------------------------------------------
   // Local implementation
 
+  void  on_main_frame_loaded(TSharedPtr<SWindow> InRootWindow, bool bIsNewProjectWindow);
   void  on_object_modified(UObject * obj_p);
   void  on_new_asset_created(UFactory * factory_p);
   void  on_assets_deleted(const TArray<UClass*> & deleted_asset_classes);
@@ -152,23 +153,11 @@ void FSkookumScriptEditor::StartupModule()
     m_on_in_memory_asset_created_handle = asset_registry.Get().OnInMemoryAssetCreated().AddRaw(this, &FSkookumScriptEditor::on_in_memory_asset_created);
     m_on_in_memory_asset_deleted_handle = asset_registry.Get().OnInMemoryAssetDeleted().AddRaw(this, &FSkookumScriptEditor::on_in_memory_asset_deleted);
 
-    // Instrument all already existing blueprints
-    for (TObjectIterator<UBlueprint> blueprint_it; blueprint_it; ++blueprint_it)
-      {
-      m_runtime_p->on_new_asset(*blueprint_it);
-      }
-
-    // Same for user defined structs
-    for (TObjectIterator<UUserDefinedStruct> struct_it; struct_it; ++struct_it)
-      {
-      m_runtime_p->on_new_asset(*struct_it);
-      }
-
-    // Same for user defined enums
-    for (TObjectIterator<UUserDefinedEnum> enum_it; enum_it; ++enum_it)
-      {
-      m_runtime_p->on_new_asset(*enum_it);
-      }
+	  // When loading a new engine version for the first time, the instrumentation of existing blueprints/structs/enums will call through to the source control
+	  // provider code to delete or add files. Unfortunately doing so causes a UI status bar to show up, this is a problem when the engine isn't up yet and will
+	  // results in a crash. So we delay this final instrumentation until after the main editor frame creation is done.
+	  IMainFrameModule& MainFrameModule = FModuleManager::LoadModuleChecked<IMainFrameModule>(TEXT("MainFrame"));
+	  MainFrameModule.OnMainFrameCreationFinished().AddRaw(this, &FSkookumScriptEditor::on_main_frame_loaded);
     }
   }
 
@@ -396,6 +385,29 @@ void FSkookumScriptEditor::PostChange(const UUserDefinedEnum * enum_p, FEnumEdit
 //=======================================================================================
 // FSkookumScriptEditor implementation
 //=======================================================================================
+
+//---------------------------------------------------------------------------------------
+//
+void FSkookumScriptEditor::on_main_frame_loaded(TSharedPtr<SWindow> InRootWindow, bool bIsNewProjectWindow)
+  {
+  // Instrument all already existing blueprints
+  for (TObjectIterator<UBlueprint> blueprint_it; blueprint_it; ++blueprint_it)
+    {
+    m_runtime_p->on_new_asset(*blueprint_it);
+    }
+
+  // Same for user defined structs
+  for (TObjectIterator<UUserDefinedStruct> struct_it; struct_it; ++struct_it)
+    {
+    m_runtime_p->on_new_asset(*struct_it);
+    }
+
+  // Same for user defined enums
+  for (TObjectIterator<UUserDefinedEnum> enum_it; enum_it; ++enum_it)
+    {
+    m_runtime_p->on_new_asset(*enum_it);
+    }
+  }
 
 //---------------------------------------------------------------------------------------
 //

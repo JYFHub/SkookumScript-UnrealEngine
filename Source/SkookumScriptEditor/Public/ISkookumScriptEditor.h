@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <ModuleManager.h>
+#include "Modules/ModuleInterface.h"
 
 //---------------------------------------------------------------------------------------
 // The public interface to this module

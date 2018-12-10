@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "Commands.h"
+#include "Framework/Commands/Commands.h"
 #include "EditorStyleSet.h"
 
 class FSkookumScriptEditorCommands : public TCommands<FSkookumScriptEditorCommands>

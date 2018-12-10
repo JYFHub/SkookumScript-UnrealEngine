@@ -37,16 +37,11 @@ namespace UnrealBuildTool.Rules
 
       // Tell build system we're not using PCHs
       PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-      // Add public include paths required here ...
-      PublicIncludePaths.Add("SkookumScriptRuntime/Public/Bindings");
-      //PublicIncludePaths.AddRange(
-      //  new string[] {          
-      //    //"Programs/UnrealHeaderTool/Public",
-      //    }
-      //  );
-
-      PrivateIncludePaths.Add("SkookumScriptRuntime/Private");
+      
+      // Expose bindings and Actor includes to self
+      PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Public/Bindings"));
+      PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Public/Bindings/Engine"));
+      PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Public/Bindings/VectorMath"));
 
       // Add public dependencies that you statically link with here ...
       PublicDependencyModuleNames.AddRange(
@@ -54,7 +49,7 @@ namespace UnrealBuildTool.Rules
           {
             "Core",
             "CoreUObject",
-            "Engine",
+            "Engine"
           }
         );
 
@@ -67,6 +62,7 @@ namespace UnrealBuildTool.Rules
             "Networking",
             "NetworkReplayStreaming",
             "Projects",
+            "SourceControl",
           }
         );
 

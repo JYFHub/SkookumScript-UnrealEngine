@@ -64,7 +64,7 @@ class USkookumScriptInstanceProperty : public UProperty
 
     virtual void          LinkInternal(FArchive & ar) override;
     virtual void          Serialize(FArchive & ar) override;
-    virtual void          SerializeItem(FArchive & ar, void * data_p, void const * default_data_p) const override;
+    virtual void          SerializeItem(FStructuredArchive::FSlot Slot, void* Value, void const* Defaults) const override;
     virtual FString       GetCPPType(FString * extended_type_text_p, uint32 cpp_export_flags) const override;
     virtual void          ExportTextItem(FString & value_str, const void * data_p, const void * default_data_p, UObject * owner_p, int32 port_flags, UObject * export_root_scope_p) const override;
     virtual const TCHAR * ImportText_Internal(const TCHAR * buffer_p, void * data_p, int32 port_flags, UObject * owner_p, FOutputDevice * error_text_p) const override;

@@ -290,14 +290,36 @@ void SkUEClassBindingHelper::resolve_raw_data(SkClass * sk_class_p, UStruct * ue
 // Resolve the raw data info of each raw data member of the given class
 bool SkUEClassBindingHelper::resolve_raw_data_static(SkClass * sk_class_p)
   {
+  // We need to ensure that structs get their raw data functions fully resolved in both editor and packaged builds.
+  // For a struct, the call stack that leads from game launch to resolving of its raw data functions is:
+  //
+  // EDITOR
+  // SkUEClassBindingHelper::resolve_raw_data_funcs(..)
+  // FSkookumScriptRuntime::on_struct_added_or_modified(.)
+  // FSkookumScriptRuntime::on_new_asset(.)
+  //
+  // PACKAGED
+  // SkUEClassBindingHelper::resolve_raw_data_funcs(..)
+  // SkUEClassBindingHelper::resolve_raw_data_static(.) <---- THIS IS US
+  // SkClass::resolve_raw_data_recurse()
+  // SkBrain::initialize_post_load()
+  // SkookumScript::initialize_program()
+  // SkUERuntime::bind_compiled_scripts(....)
+  // FSkookumScriptRuntime::on_world_init_pre(..)
+  //
+  // The important thing to note here is that for the packaged path, this function is the one chance to correctly resolve the raw data funcs.
+  // This means that we must pass in both the sk_class AND the UStruct to resolve_raw_data_funcs. Failure to pass in the UStruct will result 
+  // in the struct forever having SkUEClassBindingHelper::get_raw_pointer_null bound for its raw pointer function. 
+  // So we must attempt to resolve the UStruct before calling resolve_raw_data_funcs.
+  UStruct * ue_struct_or_class_p = get_ue_struct_or_class_from_sk_class(sk_class_p);
+
   // Resolve function pointers and determine if there's anything to do
-  if (!resolve_raw_data_funcs(sk_class_p))
+  if (!resolve_raw_data_funcs(sk_class_p, ue_struct_or_class_p))
     {
     return true;
     }
 
   // Check if it's known
-  UStruct * ue_struct_or_class_p = get_ue_struct_or_class_from_sk_class(sk_class_p);
   if (ue_struct_or_class_p)
     {
     // Resolve raw data
@@ -483,8 +505,11 @@ SkInstance * SkUEClassBindingHelper::access_raw_data_entity(void * obj_p, tSkRaw
       {
       sk_class_p = data_type_p->get_key_class();
       }
-    // If class has data, and entity_p is not null, get_embedded_instance() above should have succeeded
-    SK_ASSERTX(!entity_p || !sk_class_p->get_total_data_count(), a_str_format("Class '%s' has data but UObject has no embedded instance!", sk_class_p->get_name_cstr()));
+    // If (entity_p is valid and not pending kill) and class has data, get_embedded_instance() above should have succeeded
+    // When UObjects are destroyed they set flag PENDING_KILL and then get fully destroyed on some later tick. This can cause
+    // data count to be zero while the entity is still valid.
+    SK_ASSERTX((!entity_p || entity_p->IsPendingKill()) || !sk_class_p->get_total_data_count(), a_str_format("Class '%s' has data but UObject has no embedded instance!", sk_class_p->get_name_cstr()));
+
     // We always allocate a simple SkInstance even if class has data 
     // because either entity_p is null in which case the data should not be accessed, 
     // or get_embedded_instance() above would have succeeded
@@ -1074,7 +1099,10 @@ SkClass * SkUEClassBindingHelper::find_sk_class_from_ue_class(UClass * ue_class_
   else
     {
     ANSICHAR buffer[260];
-    const ANSICHAR * ue_class_name_p = ue_class_name.GetPlainANSIString();
+    ANSICHAR ansi_class_name[NAME_SIZE];
+    ue_class_name.GetPlainANSIString(ansi_class_name);
+
+    const ANSICHAR * ue_class_name_p = ansi_class_name;
     if (ue_class_p->UObject::IsA<UBlueprintGeneratedClass>())
       {
       // It's a Blueprint generated class
@@ -1160,7 +1188,9 @@ SkClass * SkUEClassBindingHelper::find_sk_class_from_ue_struct(UStruct * ue_stru
     }
   else
     {
-    sk_class_name = ASymbol::create_existing(ue_struct_name.GetPlainANSIString());
+    ANSICHAR ansi_struct_name[NAME_SIZE];
+    ue_struct_name.GetPlainANSIString(ansi_struct_name);
+    sk_class_name = ASymbol::create_existing(ansi_struct_name);
     }
 
   // Now look up the struct's class
@@ -1181,7 +1211,9 @@ SkClass * SkUEClassBindingHelper::find_sk_class_from_ue_struct(UStruct * ue_stru
 SkClass * SkUEClassBindingHelper::find_sk_class_from_ue_enum(UEnum * ue_enum_p)
   {
   // Convert enum name to its Sk equivalent
-  ASymbol sk_enum_name = ASymbol::create_existing(ue_enum_p->GetFName().GetPlainANSIString());
+  ANSICHAR ansi_enum_name[NAME_SIZE];
+  ue_enum_p->GetFName().GetPlainANSIString(ansi_enum_name);
+  ASymbol sk_enum_name = ASymbol::create_existing(ansi_enum_name);
 
   // Now lookup the class
   SkClass * sk_class_p = SkBrain::get_classes().get(sk_enum_name);

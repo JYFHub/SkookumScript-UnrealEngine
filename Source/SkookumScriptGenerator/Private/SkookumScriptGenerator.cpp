@@ -20,7 +20,7 @@
 
 #include "ISkookumScriptGenerator.h"
 #include "CoreUObject.h"
-#include "Regex.h"
+#include "Internationalization/Regex.h"
 #include "Runtime/Core/Public/Features/IModularFeatures.h"
 
 #include "SkookumScriptGeneratorBase.inl"
@@ -81,6 +81,7 @@ class FSkookumScriptGenerator : public ISkookumScriptGenerator, public FSkookumS
     {
     TArray<ModuleInfo>    m_script_supported_modules; // List of module names specified in SkookumScript.ini
     TArray<FString>       m_additional_includes;      // Workaround - extra header files to include
+    TArray<FString>       m_additional_code;          // Workaround - extra code to include
 
     mutable ModuleInfo *  m_current_module_p;  // Module that is currently processed by UHT
 
@@ -214,6 +215,7 @@ class FSkookumScriptGenerator : public ISkookumScriptGenerator, public FSkookumS
   static const FName    ms_meta_data_key_custom_structure_param;
   static const FName    ms_meta_data_key_array_parm;
   static const FName    ms_meta_data_key_module_relative_path;
+  static const FName    ms_meta_data_key_module_include_path;
   static const FName    ms_meta_data_key_custom_thunk;
   static const FName    ms_meta_data_key_cannot_implement_interface_in_blueprint;
 
@@ -302,6 +304,7 @@ const TCHAR * FSkookumScriptGenerator::ms_event_coro_impl_fmts_pp[EventCoro__cou
 const FName FSkookumScriptGenerator::ms_meta_data_key_custom_structure_param(TEXT("CustomStructureParam"));
 const FName FSkookumScriptGenerator::ms_meta_data_key_array_parm(TEXT("ArrayParm"));
 const FName FSkookumScriptGenerator::ms_meta_data_key_module_relative_path(TEXT("ModuleRelativePath"));
+const FName FSkookumScriptGenerator::ms_meta_data_key_module_include_path(TEXT("IncludePath"));
 const FName FSkookumScriptGenerator::ms_meta_data_key_custom_thunk(TEXT("CustomThunk"));
 const FName FSkookumScriptGenerator::ms_meta_data_key_cannot_implement_interface_in_blueprint(TEXT("CannotImplementInterfaceInBlueprint"));
 
@@ -315,7 +318,7 @@ void FSkookumScriptGenerator::Initialize(const FString & root_local_path, const 
   m_unreal_engine_root_path_build = root_build_path;
 
   // Set up information about engine and project code generation
-  FString plugin_directory = FPaths::ConvertRelativePathToFull(include_base / TEXT("../.."));
+  FString plugin_directory = FPaths::ConvertRelativePathToFull(include_base / TEXT(".."));
   FString project_file_path = FPaths::ConvertRelativePathToFull(FPaths::GetProjectFilePath());
   m_targets[ClassScope_engine].initialize(plugin_directory, TEXT("UE4"));
   m_targets[ClassScope_project].initialize(FPaths::GetPath(project_file_path), FPaths::GetBaseFilename(project_file_path), &m_targets[ClassScope_engine]);
@@ -1754,8 +1757,30 @@ void FSkookumScriptGenerator::save_generated_cpp_files(eClassScope class_scope)
         {
         class_header_code += TEXT("#include \"SkookumScript/SkEnum.hpp\"\n");
         }
+      
+      // In 4.21, include paths changed a little. Previously, we wanted include paths that looked like:
+      // Classes/GameFramework/Actor.h
+      // Public/UObject/NoExportTypes.h
+      //
+      // 4.21 expects the includes to lose the prefixes, so these become:
+      // GameFramework/Actor.h
+      // UObject/NoExportTypes.h
+      // 
+      // Some subset of generated types have a valid include path already, module_include_path below.
+      // For other types, module_include_path will be empty, in which case we need to do fix up the prefixes by hand.
+      const FString relative_file_path = generated_type.m_type_p->GetMetaData(ms_meta_data_key_module_relative_path);
+      const FString module_include_path = generated_type.m_type_p->GetMetaData(ms_meta_data_key_module_include_path);
+      
+      FString include_file_path = module_include_path;
 
-      FString include_file_path = generated_type.m_type_p->GetMetaData(ms_meta_data_key_module_relative_path);
+      // If the module include path wasn't good then we need to fix up the prefixes by hand.
+      if (include_file_path.IsEmpty())
+        {
+        include_file_path = relative_file_path;
+        include_file_path.RemoveFromStart("Classes/");
+        include_file_path.RemoveFromStart("Public/");
+        }
+
       if (!include_file_path.IsEmpty())
         {
         class_header_code += FString::Printf(TEXT("#include \"%s\"\n"), *include_file_path);
@@ -1852,6 +1877,14 @@ void FSkookumScriptGenerator::save_generated_cpp_files(eClassScope class_scope)
       {
       included_files.Add(include_file_path);
       }
+    }
+
+  binding_code += TEXT("\n");
+
+  // Add additional code
+  for (const FString & extra_code : m_targets[class_scope].m_additional_code)
+    {
+    binding_code += FString::Printf(TEXT("%s\n"), *extra_code);
     }
 
   binding_code += TEXT("\n");
@@ -2351,6 +2384,7 @@ void FSkookumScriptGenerator::GenerationTarget::initialize(const FString & root_
       FConfigCacheIni skookumscript_ini(EConfigCacheType::Temporary);
       skookumscript_ini.GetArray(TEXT("CommonSettings"), TEXT("+ScriptSupportedModules"), script_supported_modules, ini_file_path);
       skookumscript_ini.GetArray(TEXT("CommonSettings"), TEXT("+AdditionalIncludes"), m_additional_includes, ini_file_path);
+      skookumscript_ini.GetArray(TEXT("CommonSettings"), TEXT("+AdditionalCode"), m_additional_code, ini_file_path);
       }
     else if (!inherit_from_p)
       {

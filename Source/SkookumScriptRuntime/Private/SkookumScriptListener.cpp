@@ -270,15 +270,13 @@ void USkookumScriptListener::add_dynamic_function(FName callback_name, UClass * 
     UMulticastDelegateProperty * event_property_p = CastChecked<UMulticastDelegateProperty>(callback_owner_class_p->FindPropertyByName(callback_name));
 
     // Duplicate it
-    FObjectDuplicationParameters dupe_parameters(event_property_p->SignatureFunction, StaticClass());
-    //Parameters.CreatedObjects = &DuplicatedObjectList;
-    dupe_parameters.DestName = callback_name;
-    function_p = Cast<UFunction>(StaticDuplicateObjectEx(dupe_parameters));
+    function_p = DuplicateObject<UFunction>(event_property_p->SignatureFunction, StaticClass(), callback_name);
 
     // Adjust parameters
     function_p->FunctionFlags |= FUNC_Public | FUNC_BlueprintCallable | FUNC_Native;
     function_p->SetNativeFunc(exec_p);
     function_p->StaticLink(true);
+    function_p->AddToRoot(); // Since 4.21, classes and their functions are expected to be permanent objects in cooked builds
     for (TFieldIterator<UProperty> param_it(function_p); param_it; ++param_it)
       {
       // Callback parameters are always inputs
@@ -288,6 +286,7 @@ void USkookumScriptListener::add_dynamic_function(FName callback_name, UClass * 
     // Make method known to its class
     function_p->Next = StaticClass()->Children;
     StaticClass()->Children = function_p;
+    StaticClass()->AddNativeFunction(*callback_name.ToString(), exec_p);
     StaticClass()->AddFunctionToFunctionMap(function_p, function_p->GetFName());
     }
   }
@@ -313,6 +312,7 @@ void USkookumScriptListener::remove_dynamic_function(FName callback_name)
       }
 
     // Destroy the function along with its attached properties
+    function_p->RemoveFromRoot();
     function_p->MarkPendingKill();
     }
   }

@@ -45,6 +45,7 @@
 USkookumScriptInstanceProperty::USkookumScriptInstanceProperty(const FObjectInitializer & object_initializer)
   : Super(object_initializer)
   {
+  PropertyFlags |= CPF_SkipSerialization;
   ArrayDim = 1;
   #if WITH_EDITORONLY_DATA
     ElementSize = sizeof(AIdPtr<SkInstance>);
@@ -111,10 +112,10 @@ void USkookumScriptInstanceProperty::Serialize(FArchive & ar)
 
 //---------------------------------------------------------------------------------------
 
-void USkookumScriptInstanceProperty::SerializeItem(FArchive & ar, void * data_p, void const * default_data_p) const
+void USkookumScriptInstanceProperty::SerializeItem(FStructuredArchive::FSlot Slot, void* Value, void const* Defaults) const
   {
-  // This property merely reserves storage but doesn't store any actual data
-  // So there's no need to serialize anything here
+  // https://udn.unrealengine.com/questions/467186/view.html
+  Slot.EnterStream();
   }
 
 //---------------------------------------------------------------------------------------
@@ -184,7 +185,7 @@ void USkookumScriptInstanceProperty::InitializeValueInternal(void * data_p) cons
         //component_p->RegisterComponent();
         }
       }
-    else
+    else if (!owner_p->IsA<USkookumScriptBehaviorComponent>())
       {
       // Objects loaded by the editor are just loaded into the editor world, not the game world
       #if WITH_EDITOR
@@ -193,7 +194,7 @@ void USkookumScriptInstanceProperty::InitializeValueInternal(void * data_p) cons
 
       // Construct right here
       SkClass * sk_class_p = SkUEClassBindingHelper::get_sk_class_from_ue_class(owner_p->GetClass());
-      //sk_class_p->resolve_raw_data(); // In case it wasn't resolved before
+      sk_class_p->resolve_raw_data(); // In case it wasn't resolved before, in packaged builds we need to resolve this here to avoid errors accessing raw data in the constructor.
       USkookumScriptInstanceProperty::construct_instance(data_p, owner_p, sk_class_p);
       }
     }
@@ -221,8 +222,8 @@ void USkookumScriptInstanceProperty::DestroyValueInternal(void * data_p) const
   if (!(owner_p->GetFlags() & (RF_ClassDefaultObject | RF_BeginDestroyed | RF_FinishDestroyed)))
     {
     // Leave actors alone as the component we attached will take care of itself
-    AActor * actor_p = Cast<AActor>(owner_p);
-    if (!actor_p)
+    if (!owner_p->IsA<AActor>()
+     && !owner_p->IsA<USkookumScriptBehaviorComponent>())
       {
       // Not an actor, so take care of destruction here
       destroy_instance(data_p);

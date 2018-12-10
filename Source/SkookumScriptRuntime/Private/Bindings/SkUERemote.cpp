@@ -36,7 +36,7 @@
 
 #include <AgogCore/AMethodArg.hpp>
 
-#include "AssertionMacros.h"
+#include "Misc/AssertionMacros.h"
 #include "Runtime/Launch/Resources/Version.h"
 #include "Logging/LogMacros.h"
 #include "Kismet/GameplayStatics.h"
@@ -44,7 +44,7 @@
 #if PLATFORM_HAS_BSD_SOCKETS
   // $HACK - Copied from SocketSubsystemBSDPrivate.h
   #if PLATFORM_HAS_BSD_SOCKET_FEATURE_WINSOCKETS
-	  #include "WindowsHWrapper.h"
+	  #include "Windows/WindowsHWrapper.h"
 	  #include "Windows/AllowWindowsPlatformTypes.h"
 
 	  #include <winsock2.h>
@@ -680,7 +680,14 @@ void SkUERemote::get_project_info(SkProjectInfo * out_project_info_p)
 
   // Get engine id string
   out_project_info_p->m_engine_id.ensure_size(20);
-  out_project_info_p->m_engine_id.format("UE%d.%d.%d-%s", ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION, BUILT_FROM_CHANGELIST ? "Installed" : "Compiled");
+
+  // In 4.21, BUILT_FROM_CHANGELIST is only defined when building from a changelist
+  FString built_from = TEXT("Compiled");
+  #if defined(BUILT_FROM_CHANGELIST)
+  built_from = TEXT("Installed");
+  #endif
+
+  out_project_info_p->m_engine_id.format("UE%d.%d.%d-%s", ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION, *built_from);
 
   // Get game name
   out_project_info_p->m_project_name = FStringToAString(FApp::GetGameName());
@@ -706,9 +713,13 @@ void SkUERemote::get_project_info(SkProjectInfo * out_project_info_p)
           {
           out_project_info_p->m_project_name = SkBrain::ms_project_name;
           }
+        // It might be that we opened the compiled binary on a different host
+        // where the path to the project is not valid
+        if (!FPaths::FileExists(project_path)) goto GuessProjectPath;
         }
       else
         {
+      GuessProjectPath:
         // Can't get any good intelligence - improvise:
 
         // Is there an Sk project file in the usual location?

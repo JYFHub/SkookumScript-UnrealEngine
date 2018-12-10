@@ -66,6 +66,7 @@ namespace UnrealBuildTool.Rules
           "BlueprintGraph",
           "SlateCore",
           "Projects",
+          "MainFrame",
           // ... add private dependencies that you statically link with here ...
         }
         );

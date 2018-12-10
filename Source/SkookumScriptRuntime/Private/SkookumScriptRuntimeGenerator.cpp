@@ -30,6 +30,8 @@
 #include "ISourceControlModule.h"
 #include "ISourceControlProvider.h"
 #include "Interfaces/IMainFrameModule.h"
+#include "SourceControlHelpers.h"
+#include "SourceControlOperations.h"
 
 #include "Bindings/SkUEReflectionManager.hpp"
 #include "Bindings/SkUEUtils.hpp"
@@ -882,26 +884,15 @@ void FSkookumScriptRuntimeGenerator::rename_class_script_file(UObject * type_p, 
   if (cached_file_p)
     {
     // Rename the file
-    FString old_file_name = cached_file_p->get_file_name();
-    FString new_file_name = old_file_name.Replace(*(old_sk_class_name + TEXT(".")), *(new_sk_class_name + TEXT(".")));
-    FString old_file_path = m_overlay_path / old_file_name;
-    FString new_file_path = m_overlay_path / new_file_name;
-    if (IFileManager::Get().Move(*new_file_path, *old_file_path, true, true))
-      {
-      if (new_file_name != old_file_name)
-        {
-        source_control_delete(old_file_path);
-        }
-      source_control_checkout_or_add(new_file_path);
-      }
-    else
-      {
-      report_error(FString::Printf(TEXT("Couldn't rename class from '%s' to '%s'"), *old_file_name, *new_file_name));
-      }
+    const FString old_file_name = cached_file_p->get_file_name();
+    const FString new_file_name = old_file_name.Replace(*(old_sk_class_name + TEXT(".")), *(new_sk_class_name + TEXT(".")));
+    move_script_file(old_file_name, new_file_name);
+    
     // And forget its cached entry
     m_class_files.remove(idx);
 
-    // Regenerate the file if possible
+    // Even if the filenames were the same above and a file move did not occur, we still need to update the script file 
+    // since it is likely that the package path has changed. So regenerate the script file if possible.
     if (UField * field_p = get_field(type_p))
       {
       update_class_script_file(field_p, true, true);
@@ -914,22 +905,9 @@ void FSkookumScriptRuntimeGenerator::rename_class_script_file(UObject * type_p, 
     if (cached_file.m_sk_super_name == old_sk_name)
       {
       // Rename the file - no need to regenerate
-      FString old_file_name = cached_file_p->get_file_name();
-      FString new_file_name = old_file_name.Replace(*(TEXT(".") + old_sk_class_name), *(TEXT(".") + new_sk_class_name));
-      FString old_file_path = m_overlay_path / old_file_name;
-      FString new_file_path = m_overlay_path / new_file_name;
-      if (IFileManager::Get().Move(*new_file_path, *old_file_path, true, true))
-        {
-        if (new_file_name != old_file_name)
-          {
-          source_control_delete(old_file_path);
-          }
-        source_control_checkout_or_add(new_file_path);
-        }
-      else
-        {
-        report_error(FString::Printf(TEXT("Couldn't rename class from '%s' to '%s'"), *old_file_name, *new_file_name));
-        }
+      const FString old_file_name = cached_file_p->get_file_name();
+      const FString new_file_name = old_file_name.Replace(*(TEXT(".") + old_sk_class_name), *(TEXT(".") + new_sk_class_name));
+      move_script_file(old_file_name, new_file_name);
       }
     }
 
@@ -962,6 +940,38 @@ void FSkookumScriptRuntimeGenerator::delete_class_script_file(UObject * type_p)
       report_error(FString::Printf(TEXT("Couldn't delete class file '%s'"), *class_file_path));
       }
     }
+  }
+
+//---------------------------------------------------------------------------------------
+
+bool FSkookumScriptRuntimeGenerator::move_script_file(const FString & old_file_name, const FString & new_file_name)
+  {
+  const FString old_file_path = m_overlay_path / old_file_name;
+  const FString new_file_path = m_overlay_path / new_file_name;
+
+  // We are about to rename a file in Project-Generated-BP. When moving blueprints around to different folders
+  // the filename in Project-Generated-BP remains the same. Let's only proceed with the move operation if
+  // source and destination paths are different.
+  const bool is_new_path = old_file_path.Compare(new_file_path, ESearchCase::IgnoreCase) != 0;
+
+  if (is_new_path)
+    {
+    if (IFileManager::Get().Move(*new_file_path, *old_file_path, true, true))
+      {
+      if (new_file_name != old_file_name)
+        {
+        source_control_delete(old_file_path);
+        }
+      source_control_checkout_or_add(new_file_path);
+      return true;
+      }
+    else
+      {
+      report_error(FString::Printf(TEXT("Couldn't rename script file from '%s' to '%s'"), *old_file_name, *new_file_name));
+      }
+    }
+
+  return false;
   }
 
 //---------------------------------------------------------------------------------------

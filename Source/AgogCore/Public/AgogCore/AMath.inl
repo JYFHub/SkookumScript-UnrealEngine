@@ -207,7 +207,7 @@
 #else
 
   //---------------------------------------------------------------------------------------
-  A_INLINE int a_float2int(register f32 f)
+  A_INLINE int a_float2int(f32 f)
     {
     return int(f);
     }

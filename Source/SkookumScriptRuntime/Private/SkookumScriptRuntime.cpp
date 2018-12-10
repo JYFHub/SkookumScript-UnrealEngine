@@ -39,7 +39,7 @@
 #include "Runtime/Launch/Resources/Version.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
-#include "Stats.h"
+#include "Stats/Stats.h"
 
 #if WITH_EDITORONLY_DATA
 #include "KismetCompiler.h"
@@ -49,7 +49,7 @@
 #endif
 
 #if PLATFORM_WINDOWS
-#include "WindowsHWrapper.h"
+#include "Windows/WindowsHWrapper.h"
 #endif
 
 #include <AgogCore/AMethodArg.hpp>
@@ -511,12 +511,15 @@ void FAppInfo::bind_name_assign(SkBindName * bind_name_p, const AString & value)
 AString FAppInfo::bind_name_as_string(const SkBindName & bind_name) const
   {
   const FName & name = reinterpret_cast<const FName &>(bind_name);
-  const ANSICHAR * plain_string_p = name.GetPlainANSIString();
+  ANSICHAR ansi_string[NAME_SIZE];
+  name.GetPlainANSIString(ansi_string);
+  const ANSICHAR * plain_string_p = ansi_string;
 
   // If no number, quickly make a string from the plain text
   if (name.GetNumber() == NAME_NO_NUMBER_INTERNAL)
     {
-    return AString(plain_string_p, true);
+    // Make sure we allocate memory for the string
+    return AString(plain_string_p, false);
     }
 
   // Has a number, append it separated by _
@@ -1435,10 +1438,15 @@ void FSkookumScriptRuntime::on_new_asset(UObject * obj_p)
   UBlueprint * blueprint_p = Cast<UBlueprint>(obj_p);
   if (blueprint_p)
     {
-    // Install callback so we know when it was compiled
-    blueprint_p->OnCompiled().AddRaw(this, &FSkookumScriptRuntime::on_blueprint_compiled);
+    // Install callback so we know when it was compiled, make sure that only a 
+    // single callback is installed per blueprint.
+    if (!blueprint_p->OnCompiled().IsBoundToObject(this))
+      {
+      blueprint_p->OnCompiled().AddRaw(this, &FSkookumScriptRuntime::on_blueprint_compiled);
 
-    on_class_added_or_modified(blueprint_p);
+      // If the callback is already installed then on_blueprint_compiled will call the below
+      on_class_added_or_modified(blueprint_p);
+      }
     }
 
   UUserDefinedStruct * struct_p = Cast<UUserDefinedStruct>(obj_p);

@@ -1174,6 +1174,16 @@ FString FSkookumScriptGeneratorBase::get_skookum_default_initializer(UFunction *
       {
       has_default_value = true;
       default_value = function_p->GetMetaData(cpp_default_value_key);
+
+      // In 4.20 somewhere, default values of nullptr started getting meta data set to none.
+      // See HeaderParser.cpp FHeaderParser::DefaultValueStringCppFormatToInnerFormat
+      if (param_p->IsA(UClassProperty::StaticClass()) || param_p->IsA(UObjectPropertyBase::StaticClass()))
+        {
+        if (default_value.Equals(TEXT("None")))
+          {
+          default_value = TEXT("");
+          }
+        }
       }
     }
   if (has_default_value)
@@ -1244,7 +1254,7 @@ FString FSkookumScriptGeneratorBase::get_skookum_default_initializer(UFunction *
       switch (type_id)
         {
         case SkTypeID_Integer:         break; // Leave as-is
-        case SkTypeID_Real:            break; // Leave as-is
+        case SkTypeID_Real:            if (default_value[default_value.Len() - 1] == 'f') default_value[default_value.Len() - 1] = '0'; break; // If last character is f, replace with 0
         case SkTypeID_Boolean:         default_value = FChar::IsDigit(default_value[0]) ? (default_value[0] == '1' ? TEXT("true") : TEXT("false")) : *default_value.ToLower(); break;
         case SkTypeID_String:          default_value = TEXT("\"") + default_value + TEXT("\""); break;
         case SkTypeID_Name:            default_value = (default_value == TEXT("None") ? TEXT("Name!none") : TEXT("Name!(\"") + default_value + TEXT("\")")); break;

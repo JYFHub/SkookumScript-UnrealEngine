@@ -30,7 +30,6 @@
 #include "GameFramework/DamageType.h"
 #include "GameFramework/Controller.h"
 #include "Components/PrimitiveComponent.h"
-#include "UnrealMath.h"          // Vector math functions.
 
 #include <AgogCore/AIdPtr.hpp>
 #include <AgogCore/AList.hpp>

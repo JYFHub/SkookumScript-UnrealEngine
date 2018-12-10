@@ -76,12 +76,51 @@ namespace SkTransform_Impl
     }
 
   //---------------------------------------------------------------------------------------
+  // # Skookum:   Transform@unit_axis_x() Vector3
+  // # Author(s): Zachary Burke
+  static void mthd_unit_axis_x(SkInvokedMethod * scope_p, SkInstance ** result_pp)
+    {
+    if (result_pp)
+      {
+      SkInstance * this_p = scope_p->get_this();
+      *result_pp = SkVector3::new_instance(this_p->as<SkTransform>().GetUnitAxis(EAxis::X));
+      }
+    }
+
+  //---------------------------------------------------------------------------------------
+  // # Skookum:   Transform@unit_axis_y() Vector3
+  // # Author(s): Zachary Burke
+  static void mthd_unit_axis_y(SkInvokedMethod * scope_p, SkInstance ** result_pp)
+    {
+    if (result_pp)
+      {
+      SkInstance * this_p = scope_p->get_this();
+      *result_pp = SkVector3::new_instance(this_p->as<SkTransform>().GetUnitAxis(EAxis::Y));
+      }
+    }
+
+  //---------------------------------------------------------------------------------------
+  // # Skookum:   Transform@unit_axis_z() Vector3
+  // # Author(s): Zachary Burke
+  static void mthd_unit_axis_z(SkInvokedMethod * scope_p, SkInstance ** result_pp)
+    {
+    if (result_pp)
+      {
+      SkInstance * this_p = scope_p->get_this();
+      *result_pp = SkVector3::new_instance(this_p->as<SkTransform>().GetUnitAxis(EAxis::Z));
+      }
+    }
+
+  //---------------------------------------------------------------------------------------
 
   // Instance method array
   static const SkClass::MethodInitializerFunc methods_i[] =
     {
-      { "String",       mthd_String },
-      { "identity",     mthd_identity },
+      { "String",        mthd_String },
+      { "identity",      mthd_identity },
+      { "unit_axis_x",   mthd_unit_axis_x },
+      { "unit_axis_y",   mthd_unit_axis_y },
+      { "unit_axis_z",   mthd_unit_axis_z },
     };
 
   } // namespace

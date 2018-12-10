@@ -16,7 +16,7 @@
   [  
   if [not controller.null?] and [actor_location.distance(location) > acceptance_radius]
     [
-    @@world.@navigation_system.simple_move_to_location(controller, location)
+    AIBlueprintHelperLibrary.simple_move_to_location(controller, location)
     loop 
       [ 
       _wait

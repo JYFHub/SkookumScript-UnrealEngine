@@ -29,7 +29,7 @@
 #include "SkUEName.hpp"
 #include "../SkUERuntime.hpp"
 #include "../SkUEUtils.hpp"
-#include "UObjectHash.h"
+#include "UObject/UObjectHash.h"
 #include <SkUEWorld.generated.hpp>
 
 #include <SkookumScript/SkList.hpp>
@@ -114,7 +114,7 @@ namespace SkUEActor_Impl
     bool found_enabled_overlap_event = false;
     for (UActorComponent * component_p : components)
       {
-      if (Cast<UPrimitiveComponent>(component_p)->bGenerateOverlapEvents)
+      if (Cast<UPrimitiveComponent>(component_p)->GetGenerateOverlapEvents())
         {
         found_enabled_overlap_event = true;
         break;
