@@ -1,11 +1,11 @@
 {
   "FileVersion" : 3,
-  "Version": 1,
-  "VersionName": "3.0.5663",
+  "Version" : 1,
+  "VersionName" : "3.0.5663",
   "EngineVersion" : "4.21.0",
   "FriendlyName" : "SkookumScript",
   "Description": "The superpowered scripting language and tool suite.",
-  "Category": "Scripting",
+  "Category" : "Scripting",
   "CreatedBy" : "Agog Labs Inc.",
   "CreatedByURL" : "http://SkookumScript.com",
   "DocsURL" : "http://skookumscript.com/docs/",
@@ -17,6 +17,7 @@
   "Installed" : true,
   "SupportedPrograms" : ["UnrealHeaderTool"],
   "CanBeUsedWithUnrealHeaderTool" : true,
+
   "Modules": [
     {
       "Name": "SkookumScriptGenerator",
@@ -28,67 +29,19 @@
       "Name": "SkookumScriptRuntime",
       "Type": "Runtime",
       "LoadingPhase": "PreLoadingScreen",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Win32",
-        "Mac",
-        "Linux",
-        "IOS",
-        "TVOS",
-        "Android",
-        "XboxOne",
-        "PS4"
-      ]
-    },
-    {
-      "Name": "AgogCore",
-      "Type": "Runtime",
-      "LoadingPhase": "None",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Win32",
-        "Mac",
-        "Linux",
-        "IOS",
-        "TVOS",
-        "Android",
-        "XboxOne",
-        "PS4"
-      ]
-    },
-    {
-      "Name": "SkookumScript",
-      "Type": "Runtime",
-      "LoadingPhase": "None",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Win32",
-        "Mac",
-        "Linux",
-        "IOS",
-        "TVOS",
-        "Android",
-        "XboxOne",
-        "PS4"
-      ]
+      "WhitelistPlatforms": [ "Win64", "Win32", "Mac", "IOS", "TVOS", "Android" ]
     },
     {
       "Name": "SkookumScriptEditor",
       "Type": "Editor",
       "LoadingPhase": "Default",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Mac"
-      ]
+      "WhitelistPlatforms": [ "Win64", "Mac" ]
     },
     {
       "Name": "SkookumScriptEditorGUI",
       "Type": "Editor",
       "LoadingPhase": "PostEngineInit",
-      "WhitelistPlatforms": [
-        "Win64",
-        "Mac"
-      ]
+      "WhitelistPlatforms": [ "Win64", "Mac" ]
     }
   ]
 }
