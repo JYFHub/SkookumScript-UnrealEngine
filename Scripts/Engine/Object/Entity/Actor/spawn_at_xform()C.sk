@@ -19,10 +19,11 @@
 ( Transform xform
   Actor     owner: Actor!null
   World     world_context: @@world
+  ESpawnActorCollisionHandlingMethod collision_handling_override: ESpawnActorCollisionHandlingMethod.@@always_spawn
 ) ThisClass_
 
   [
-  !actor: GameLib.begin_spawning_actor_from_class(
-    world_context static_class xform false owner)
+  !actor : GameLib.begin_deferred_actor_spawn_from_class(
+    world_context static_class xform collision_handling_override owner)
   GameLib.finish_spawning_actor(actor xform)
   ]
